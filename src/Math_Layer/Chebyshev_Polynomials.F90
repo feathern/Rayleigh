@@ -1,5 +1,7 @@
 Module Chebyshev_Polynomials
     Use Structures
+    Use qipack_master_scalareq_d , Only : Initialize_master_cheby_QIpack, wrap_LUsolve_band_d, dchebi
+    Use, intrinsic :: iso_c_binding
     ! Module for computing Chebyshev Polynomial Arrays and the associated Derivative Arrays
     Implicit None
     Integer :: cp_nthreads
@@ -35,7 +37,7 @@ Module Chebyshev_Polynomials
             Procedure :: dealias_buffer => dealias_buffer4d
             Procedure :: to_spectral => to_spectral4d
             Procedure :: from_spectral => from_spectral4d
-            Procedure :: d_by_dr_cp => Cheby_Deriv_Buffer_4D
+            Procedure :: d_by_dr_cp => QI_Deriv_4D ! Cheby_Deriv_Buffer_4D
     End Type Cheby_Grid
 
     Type(Cheby_Grid), Public :: main_grid  ! Publically accessible grid object (alleviates need for pointers)
@@ -59,6 +61,17 @@ Contains
         Integer :: ind, ind2, n_max, dmx, gindex, db,scheck
         Logical :: custom_dealiasing = .false.
         Logical :: report
+
+        !For QIPack
+        Integer :: nf1, pow_max, order_max, ntrunc_max
+        Real*8 :: layer_center, layer_gap
+
+
+
+
+
+
+
         report = .false.
 
         If (present(verbose)) Then
@@ -184,6 +197,17 @@ Contains
             If (nthread .gt. 1) cp_nthreads = nthread
         Endif
 
+        !Initialize QIPack
+        nf1 = (2*size(grid))/3
+        layer_gap = maxval(grid)-minval(grid)
+        layer_center = minval(grid)+layer_gap*0.5d0
+        pow_max = 0    ! not really used here (for R^2 factors)
+        order_max = 3  ! highest order derivative needd
+        ntrunc_max = 2 ! need to set this later
+
+
+        Call Initialize_master_cheby_QIpack(nf1, layer_center, layer_gap, &
+                                            pow_max, order_max, Ntrunc_max, report)
     End Subroutine Initialize_Cheby_Grid
 
 
@@ -623,5 +647,73 @@ Contains
         Enddo
         Enddo
     End Subroutine Cheby_Deriv_Buffer_4D    
+
+    Subroutine QI_Deriv_4D(self,ind,dind,buffer,dorder)
+#ifdef useomp 
+        Use Omp_lib
+#endif
+        Implicit None
+        Class (Cheby_Grid) :: self
+        Real*8,  Intent(InOut) :: buffer(0:,1:,1:,1:)    ! Makes it easier to reconcile with my IDL code
+        Integer, Intent(In)    :: ind, dind, dorder
+        Integer :: dims(4), n1, n2, n3, sta3
+        !Type(ddia_and_lu), Intent(In) :: dChebI
+        Type(C_ptr) :: dumptr
+        !        Real(Kind=dp), Pointer :: fptr2_deriv_start(:)
+        !        Real(Kind=dp), Pointer :: fptr2_field_start(:)
+
+        Real(kind=8), Pointer :: fptr2_deriv_start(:)
+        Real(kind=8), Pointer :: fptr2_field_start(:)
+
+        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        ! These variables are for temporary wrapper due to de-aliasing details in Rayleigh
+
+        Real*8, Allocatable :: ftemp(:,:,:), dtemp(:,:,:)
+        Integer :: nf1
+
+
+        dims = shape(buffer)
+        sta3 = 1 
+        n1 = dims(1)
+        n2 = dims(2)
+        n3 = dims(3)
+
+        nf1 = (2*n1)/3
+        Allocate(ftemp(nf1,n2,n3), dtemp(nf1,n2,n3))
+        ftemp(:,:,:) = buffer(:,:,:,ind)
+        dtemp(:,:,:) = buffer(:,:,:,ind)
+        
+
+
+
+        if (n3.ge.sta3) then
+            ! first copy
+
+            dumptr = C_Loc(ftemp(2,1,sta3))  ! ignore n=0 since taking derivative
+
+            Call C_F_Pointer (dumptr, fptr2_field_start, [Nf1*N2*(N3+1-sta3)]) !last point is crap
+
+            dumptr = C_Loc(dtemp(1,1,sta3))  ! ignore n=nmax
+  
+            Call C_F_Pointer (dumptr, fptr2_deriv_start, [Nf1*N2*(N3+1-sta3)])
+            fptr2_deriv_start = fptr2_field_start
+
+            Call wrap_LUsolve_band_d(dchebi, fptr2_deriv_start, n2*(n3+1-sta3), Nf1, .False.)
+            dtemp(nf1,:,:) = 0.0d0
+        end if
+
+ 
+        buffer(:,:,:,dind) = 0.0d0
+        buffer(1:nf1,1:n2,1:n3,dind) = dtemp(1:nf1,1:n2,1:n3)
+        DeAllocate(ftemp,dtemp)
+
+        !Do k = 1, n3
+        !Do j = 1, n2
+        !buffer(:,j,k,dind) = buffer(:,j,k,dind)*(self%deriv_scaling(:)**dorder)
+        !Enddo
+        !Enddo
+    End Subroutine QI_Deriv_4D   
+
+
 
 End Module Chebyshev_Polynomials

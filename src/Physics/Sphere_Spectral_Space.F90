@@ -85,7 +85,9 @@ Contains
 		! T
 		Call gridcp%d_by_dr_cp(tvar,d2tdr2,wsp%p1a,2)
 		ctemp%p1a(:,:,:,3) = wsp%p1a(:,:,:,d2tdr2)
+
 		Call gridcp%d_by_dr_cp(tvar,dtdr,wsp%p1a,1)
+
 		! Z..
 		Call gridcp%d_by_dr_cp(zvar,d2zdr2,wsp%p1a,2)
 		ctemp%p1a(:,:,:,4) = wsp%p1a(:,:,:,d2zdr2)

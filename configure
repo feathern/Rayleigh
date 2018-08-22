@@ -260,7 +260,7 @@ PREFIX=$RAYLEIGHROOT
 NEED_HELP=no
 USE_MKL="FALSE"
 CUSTOMROOT="none"
-
+USEQIPACK="FALSE"
 
 ###############################################################################################
 
@@ -338,6 +338,11 @@ do
     --with-mkl=*)
       RAMKLROOT=`expr "x$option" : "x-*with-mkl=\(.*\)"`;
       USE_MKL="TRUE";
+      ;;
+
+    --with-qipack=*)
+      QIPACKROOT=`expr "x$option" : "x-*with-qipack=\(.*\)"`;
+      USEQIPACK="TRUE";
       ;;
 
     --with-fftw=*)
@@ -617,6 +622,12 @@ if [ "$CUSTOMINC" == "TRUE" ]
 then
   RAYLEIGH_INC=$RAINC
 fi
+
+if [ "$USEQIPACK" == "TRUE" ]
+then
+  RAYLEIGH_INC=$RAYLEIGH_INC" -I$QIPACKROOT/include"
+fi
+
 echo " Include flags              :  "$RAYLEIGH_INC
 echo ""
 ###############################################################################################
@@ -679,6 +690,12 @@ if [ "$CUSTOMLIB" == "TRUE" ]
 then
   LIB_FLAGS=$RALIB
   FULL_LIB=$RALIB
+fi
+
+if [ "$USEQIPACK" == "TRUE" ]
+then
+  LIB_FLAGS=$LIB_FLAGS" -L$QIPACKROOT/lib -lqipack"
+  FULL_LIB=$FULL_LIB" -L$QIPACKROOT/lib -lqipack"
 fi
 
 echo " Library flags              :  "$FULL_LIB
