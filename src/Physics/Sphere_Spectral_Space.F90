@@ -87,7 +87,16 @@ Contains
 		ctemp%p1a(:,:,:,3) = wsp%p1a(:,:,:,d2tdr2)
 
 		Call gridcp%d_by_dr_cp(tvar,dtdr,wsp%p1a,1)
-
+	    Do m = 1, my_num_lm
+            If (l_lm_values(m-1+my_lm_min) .eq. 0) Then
+                Write(6,*)'Writing', my_rank
+                Open (Unit=9, File='ell0_t_and_dtdr.dat', Status='replace', Access='stream')
+                Write(9) N_R
+                Write(9) wsp%p1a(:,1,m,tvar)
+                Write(9) wsp%p1a(:,1,m,dtdr)
+                Close (Unit=9)
+            Endif
+	    Enddo
 		! Z..
 		Call gridcp%d_by_dr_cp(zvar,d2zdr2,wsp%p1a,2)
 		ctemp%p1a(:,:,:,4) = wsp%p1a(:,:,:,d2zdr2)
