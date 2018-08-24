@@ -88,7 +88,7 @@ Contains
 
 		Call gridcp%d_by_dr_cp(tvar,dtdr,wsp%p1a,1)
 	    Do m = 1, my_num_lm
-            If (l_lm_values(m-1+my_lm_min) .eq. 0) Then
+            If (l_lm_values(m-1+my_lm_min) .eq. 1000000) Then
                 Write(6,*)'Writing', my_rank
                 Open (Unit=9, File='ell0_t_and_dtdr.dat', Status='replace', Access='stream')
                 Write(9) N_R

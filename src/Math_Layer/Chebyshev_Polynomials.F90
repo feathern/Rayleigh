@@ -648,13 +648,13 @@ Contains
         Enddo
     End Subroutine Cheby_Deriv_Buffer_4D    
 
-    Subroutine QI_Deriv_4D(self,ind,dind,buffer,dorder)
+    Subroutine QI_Deriv_4Db(self,ind,dind,buffer,dorder)
 #ifdef useomp 
         Use Omp_lib
 #endif
         Implicit None
         Class (Cheby_Grid) :: self
-        Real*8,  Intent(InOut) :: buffer(0:,1:,1:,1:)    ! Makes it easier to reconcile with my IDL code
+        Real*8,  Intent(InOut) :: buffer(1:,1:,1:,1:)  
         Integer, Intent(In)    :: ind, dind, dorder
         Integer :: dims(4), n1, n2, n3, sta3
         !Type(ddia_and_lu), Intent(In) :: dChebI
@@ -712,8 +712,141 @@ Contains
         !buffer(:,j,k,dind) = buffer(:,j,k,dind)*(self%deriv_scaling(:)**dorder)
         !Enddo
         !Enddo
+    End Subroutine QI_Deriv_4Db   
+
+    Subroutine QI_Deriv_4Da(self,ind,dind,buffer,dorder)
+#ifdef useomp 
+        Use Omp_lib
+#endif
+        Implicit None
+        Class (Cheby_Grid) :: self
+        Real*8,  Intent(InOut) :: buffer(0:,1:,1:,1:)    ! Makes it easier to reconcile with my IDL code
+        Integer, Intent(In)    :: ind, dind, dorder
+        Integer :: dims(4), n1, n2, n3, sta3
+        Type(C_ptr) :: dumptr
+
+        Real(kind=8), Pointer :: fptr2_deriv_start(:)
+        Real(kind=8), Pointer :: fptr2_field_start(:)
+
+        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        ! These variables are for temporary wrapper due to de-aliasing details in Rayleigh
+
+        Integer :: nf1
+
+
+        buffer(:,:,:,dind) = 0.0d0
+
+        dims = shape(buffer)
+        sta3 = 1 
+        n1 = dims(1)
+        n2 = dims(2)
+        n3 = dims(3)
+
+        nf1 = (2*n1)/3
+        
+
+
+
+        if (n3.ge.sta3) then
+            ! first copy
+
+            dumptr = C_Loc(buffer(1,1,sta3,ind))  ! ignore n=0 since taking derivative
+
+            Call C_F_Pointer (dumptr, fptr2_field_start, [N1*N2*(N3+1-sta3)]) !last point is crap
+
+            dumptr = C_Loc(buffer(0,1,sta3,dind))  ! ignore n=nmax
+  
+            Call C_F_Pointer (dumptr, fptr2_deriv_start, [N1*N2*(N3+1-sta3)])
+            fptr2_deriv_start = fptr2_field_start
+
+            Call wrap_LUsolve_band_d(dchebi, fptr2_deriv_start, n2*(n3+1-sta3), N1, .False.)
+            buffer(nf1,:,:,dind) = 0.0d0
+            buffer(0,:,:,dind) = buffer(0,:,:,dind)*2
+        end if
+
+ 
+
+        !Do k = 1, n3
+        !Do j = 1, n2
+        !buffer(:,j,k,dind) = buffer(:,j,k,dind)*(self%deriv_scaling(:)**dorder)
+        !Enddo
+        !Enddo
+    End Subroutine QI_Deriv_4Da   
+
+    Subroutine QI_Deriv_4D(self,ind,dind,buffer,dorder)
+#ifdef useomp 
+        Use Omp_lib
+#endif
+        Implicit None
+        Class (Cheby_Grid) :: self
+        Real*8,  Intent(InOut) :: buffer(0:,1:,1:,1:)    ! Makes it easier to reconcile with my IDL code
+        Integer, Intent(In)    :: ind, dind, dorder
+        Integer :: dims(4), n1, n2, n3, iorder
+        Type(C_ptr) :: dumptr
+
+        Real(kind=8), Pointer :: fptr2_deriv_start(:)
+        Real(kind=8), Pointer :: fptr2_field_start(:)
+
+        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        ! These variables are for temporary wrapper due to de-aliasing details in Rayleigh
+
+        Integer :: nf1
+
+
+        ! initialize the derivative buffer to zero now
+        buffer(:,:,:,dind) = 0.0d0
+
+        dims = shape(buffer)
+        n1 = dims(1)
+        n2 = dims(2)
+        n3 = dims(3)
+
+        nf1 = (2*n1)/3
+        
+
+        !BM: I removed sta3=1, because always true for you.
+        !BM: I removed the check that N3.GE.1 (always true?)
+        !BM: (Nick, Delete these comments if OK)          
+
+        Do iorder = 1,dorder
+            !==================================================
+            ! ...... Point to the Field:
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            if (iorder.eq.1) Then
+               dumptr = C_Loc(buffer(1,1,1, ind))
+            Else
+               dumptr = C_Loc(buffer(1,1,1,dind))
+            End If
+            Call C_F_Pointer (dumptr, fptr2_field_start, [N1*N2*N3])
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ! ...... Point to the Derivative of the field:
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            dumptr = C_Loc(buffer(0,1,1,dind))  ! ignore n=nmax
+            Call C_F_Pointer (dumptr, fptr2_deriv_start, [N1*N2*N3])
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ! ...... Now copy for the in-place solve:
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            fptr2_deriv_start = fptr2_field_start
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ! ...... IN-PLACE LU SOLVE:
+            !        Size = nf1 - 1, 
+            !        nf1 coef set by hand to 0 (highest dealiased coef)
+            !        Takes N1 strides to jump over aliased coefs.
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            Call wrap_LUsolve_band_d(dchebi, fptr2_deriv_start, N2*N3, N1, .False.)
+            buffer(nf1-1,:,:,dind) = 0.0d0 ! really the nf1 coef, but indexing starts at 0.
+            buffer(0,:,:,dind) = buffer(0,:,:,dind)*2
+            !==================================================
+        End Do  
+        !buffer(0,:,:,dind) = buffer(0,:,:,dind)*2
+        
+ 
+
+        !Do k = 1, n3
+        !Do j = 1, n2
+        !buffer(:,j,k,dind) = buffer(:,j,k,dind)*(self%deriv_scaling(:)**dorder)
+        !Enddo
+        !Enddo
     End Subroutine QI_Deriv_4D   
-
-
 
 End Module Chebyshev_Polynomials
