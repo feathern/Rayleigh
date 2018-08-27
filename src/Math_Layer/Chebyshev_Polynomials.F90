@@ -200,12 +200,13 @@ Contains
 
         !Initialize QIPack
         nf1 = (2*size(grid))/3
-        layer_gap = 1.0d0 ! maxval(grid)-minval(grid)
+        
+        layer_gap = (maxval(grid)-minval(grid)) !*( 1.0d0-(1.0d0-cos(0.5d0*pi/size(grid)))*2 )
         layer_center =  minval(grid)+layer_gap*0.5d0
         pow_max = 0    ! not really used here (for R^2 factors)
         order_max = 3  ! highest order derivative needd
         ntrunc_max = 2 ! need to set this later
-
+        Write(6,*)'Mind the gap: ', maxval(grid), minval(grid), maxval(grid)-minval(grid), layer_gap
 
         Call Initialize_master_cheby_QIpack(nf1, layer_center, layer_gap, &
                                             pow_max, order_max, Ntrunc_max, report)
