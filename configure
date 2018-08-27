@@ -546,10 +546,12 @@ MULTIVEC=FALSE
 if [[ $DEVELMODE == "TRUE" ]]
 then
   echo "************************************************************************"
-  echo " Development mode has been activated.  Both rayleigh.opt"
-  echo " and rayleigh.dbg will be compiled with debugging flags "
-  echo " and no vectorization."
+  echo " Development mode has been activated."
+  echo " Only rayleigh.dbg will be compiled (with debugging flags)"
+  echo " and no vectorization)."
+  RVALUES[0]=$DEBUG
   FFLAGS[0]=$DBG_FLAGS
+  nvers=1
 fi
 
 

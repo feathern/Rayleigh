@@ -37,7 +37,8 @@ Module Chebyshev_Polynomials
             Procedure :: dealias_buffer => dealias_buffer4d
             Procedure :: to_spectral => to_spectral4d
             Procedure :: from_spectral => from_spectral4d
-            Procedure :: d_by_dr_cp => QI_Deriv_4D ! Cheby_Deriv_Buffer_4D
+            Procedure :: d_by_dr_cp => QI_Deriv_4D 
+            !Procedure :: d_by_dr_cp => Cheby_Deriv_Buffer_4D
     End Type Cheby_Grid
 
     Type(Cheby_Grid), Public :: main_grid  ! Publically accessible grid object (alleviates need for pointers)
@@ -199,8 +200,8 @@ Contains
 
         !Initialize QIPack
         nf1 = (2*size(grid))/3
-        layer_gap = maxval(grid)-minval(grid)
-        layer_center = minval(grid)+layer_gap*0.5d0
+        layer_gap = 1.0d0 ! maxval(grid)-minval(grid)
+        layer_center =  minval(grid)+layer_gap*0.5d0
         pow_max = 0    ! not really used here (for R^2 factors)
         order_max = 3  ! highest order derivative needd
         ntrunc_max = 2 ! need to set this later
