@@ -1,5 +1,6 @@
 Module Fourier_Transform
 	Implicit None
+
 	Include 'fftw3.f'
 
 	Interface FFT_To_Spectral

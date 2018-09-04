@@ -21,6 +21,7 @@ rayleigh:
 	@cp $(SRC)/Include/*.F $(BUILD)/.
 	@cp $(SRC)/Makefile $(BUILD)/.
 	@cp $(SRC)/object_list $(BUILD)/.
+	@cp ~feathern/Machine_Definitions.hack src/build/Machine_Definitions
 ifeq ($(NODIRS),1)
 	cp $(SRC)/Utility/MakeDir.F90_IBM $(BUILD)/MakeDir.F90
 endif

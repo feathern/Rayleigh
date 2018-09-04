@@ -2,7 +2,8 @@ Module Chebyshev_Polynomials
     Use Structures
     Use qipack_master_scalareq_d , Only : Initialize_master_cheby_QIpack, wrap_LUsolve_band_d, dchebi
     Use, intrinsic :: iso_c_binding
-    ! Module for computing Chebyshev Polynomial Arrays and the associated Derivative Arrays
+    Use Cosine_Transform, Only: r2r_4D_fftw_forward, r2r_4D_fftw_inverse
+   ! Module for computing Chebyshev Polynomial Arrays and the associated Derivative Arrays
     Implicit None
     Integer :: cp_nthreads
     Real*8, private ::    Pi  = 3.1415926535897932384626433832795028841972d+0
@@ -38,12 +39,32 @@ Module Chebyshev_Polynomials
             Procedure :: to_spectral => to_spectral4d
             Procedure :: from_spectral => from_spectral4d
             Procedure :: d_by_dr_cp => QI_Deriv_4D 
+            Procedure :: from_spectral_cos
+            Procedure :: to_spectral_cos
             !Procedure :: d_by_dr_cp => Cheby_Deriv_Buffer_4D
     End Type Cheby_Grid
 
     Type(Cheby_Grid), Public :: main_grid  ! Publically accessible grid object (alleviates need for pointers)
 
 Contains
+
+    Subroutine to_spectral_cos(self,f_in, f_out)
+        Implicit None
+        Class(Cheby_Grid) :: self
+        Real*8, Intent(InOut) :: f_out(:,:,:,:), f_in(:,:,:,:)
+
+
+        Call r2r_4D_fftw_forward(f_in, f_out)
+    End Subroutine to_spectral_cos
+
+    Subroutine from_spectral_cos(self,f_in, f_out)
+        Implicit None
+        Class(Cheby_Grid) :: self
+        Real*8, Intent(InOut) :: f_out(:,:,:,:), f_in(:,:,:,:)
+
+
+        Call r2r_4D_fftw_inverse(f_in, f_out)
+    End Subroutine from_spectral_cos
 
     Subroutine Initialize_Cheby_Grid(self,grid,integration_weights,ndomains,npoly, & 
                 & bounds,dmax,nthread,dealias_by, verbose)

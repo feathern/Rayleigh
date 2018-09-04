@@ -144,6 +144,64 @@ Contains
 		Call gridcp%dealias_buffer(ctemp%p1a) !De-Alias
 		wsp%p1a(:,:,:,:) = 0.0d0	! Shouldn't need to do this, but just to be sure
 		Call gridcp%From_Spectral(ctemp%p1a,wsp%p1a)
+
+        !~~~~~~~~~~~~~~~~~~~~~~ qipack
+        !in-place cosine transform check
+
+	    Do m = 1, my_num_lm
+            If (l_lm_values(m-1+my_lm_min) .eq. 0) Then
+                Write(6,*) ' '
+                Write(6,*) ctemp%p1a(:,1,m,tvar)
+                Write(6,*)' '
+            Endif
+	    Enddo
+
+        Call ctemp%construct('p1b')
+        ctemp%p1b=-1
+
+        Call gridcp%from_spectral_cos(ctemp%p1a,ctemp%p1b)
+
+	    Do m = 1, my_num_lm
+            If (l_lm_values(m-1+my_lm_min) .eq. 0) Then
+                Write(6,*) ' '
+                Write(6,*) ctemp%p1b(:,1,m,tvar)
+                Write(6,*)' '
+            Endif
+	    Enddo
+	    Do m = 1, my_num_lm
+            If (l_lm_values(m-1+my_lm_min) .eq. 0) Then
+                Write(6,*)'Writing', my_rank
+                Open (Unit=9, File='reg_vs_cos_tvar.dat', Status='replace', Access='stream')
+                Write(9) N_R
+                Write(9) radius(:)
+                Write(9) wsp%p1a(:,1,m,tvar)
+                Write(9) ctemp%p1b(:,1,m,tvar)
+                Close (Unit=9)
+            Endif
+	    Enddo
+
+
+        ctemp%p1a =0
+        ctemp%p1b = 0
+        Call gridcp%To_Spectral(wsp%p1a,ctemp%p1a)
+        Call gridcp%To_Spectral_Cos(wsp%p1a,ctemp%p1b)
+
+	    Do m = 1, my_num_lm
+            If (l_lm_values(m-1+my_lm_min) .eq. 0) Then
+                Write(6,*)'Writing coeffs', my_rank
+                Open (Unit=9, File='reg_vs_cos_tcoef.dat', Status='replace', Access='stream')
+                Write(9) N_R
+                Write(9) radius(:)
+                Write(9) ctemp%p1a(:,1,m,tvar)
+                Write(9) ctemp%p1b(:,1,m,tvar)
+                Close (Unit=9)
+            Endif
+	    Enddo
+
+
+        Call ctemp%deconstruct('p1b')
+
+        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		Call ctemp%deconstruct('p1a')
 
 		!/////////////////////////////////////////////////////////////////
