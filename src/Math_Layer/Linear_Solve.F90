@@ -33,6 +33,10 @@ Module Linear_Solve
         real*8, Allocatable :: lhs(:,:)        ! The matrix to be inverted for this equation
                                                                     ! If an equation set is linked, this is only allocated for the primary 
                                                                     ! equation in the link.
+        !Type(ddia_and_lu) :: LDIA    ! %dia is the sparse matrix in diagonal format: %dia%dat(:,:) are the coefs, %dia%nrow, ncol, nl, nu
+                                     ! %lu(:,:) is the LU factorization
+                                     ! %piv(:) are the pivots
+
         real*8, Pointer, dimension(:,:) :: mpointer    ! Points to LHS of the primary equation in a linked set (or LHS if not linked)
 
         real*8, Allocatable:: rhs(:,:,:)    ! RHS array for all modes of a given equation.  Only allocated for mode 1
