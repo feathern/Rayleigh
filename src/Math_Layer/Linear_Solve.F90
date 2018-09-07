@@ -66,6 +66,17 @@ Module Linear_Solve
         Real*8  :: dparm(64), ddum
         logical :: sparse_initialized = .false.
 
+
+        !/////////////////////////////////////////////////////////////////////////
+        ! QI Pack Variables
+        !Integer, Allocatable  :: Equ_order(:,:) ! really needs to be an array of length nlinks x nsub_modes
+        Real*8, Allocatable :: rhs_cheby(:,:,:)   ! The Chebyshev transform of rhs(:,:,:)
+        real*8, Pointer, dimension(:,:,:) :: rhs_pointer_cheby    ! Analagous to rhs_pointer
+        
+        Real*8, Allocatable :: rhs_icheby(:,:,:)   ! Contracted
+        real*8, Pointer, dimension(:,:,:) :: rhs_pointer_icheby    ! Analagous to rhs_pointer
+
+        ! Methods
         Contains
         Procedure :: LU_Solve_Sparse
         Procedure :: LU_Decompose_Sparse
@@ -1462,7 +1473,105 @@ Module Linear_Solve
 
     End Subroutine Load_Single_Row_Cheby
 
+    !/////////////////////////////////////////////////////////////////////////
+    ! QIPack Routines
+    Subroutine Allocate_RHS_QI(eqind,zero_rhs)
+        Implicit None
+        Integer, Intent(In) :: eqind
+        Integer :: k,j, ndim, ind, indx, nsub
+        Logical, Intent(In), Optional :: zero_rhs 
+        ! We use one large RHS for each set of equations, with the first mode's 
+        ! equation object holding that RHS. Each mode's equation object points to
+        ! the appropriate parts of that RHS space.  The idea is that the RHS can be
+        ! accessed more efficiently when adding nonlinear and CN terms.
+        
+        Write(6,*)'RHS_QI!'
 
+        !/// Allocation
+        k = eqind
+
+        If (equation_set(1,k)%primary) Then
+            ndim = (ndim1*equation_set(1,k)%nlinks*2)/3
+            Allocate(equation_set(1,k)%rhs_cheby(1:ndim,1:ndim2,1:n_modes_total))
+            If(present(zero_rhs)) Then
+                If (zero_rhs .eqv. .true.) Then
+                    equation_set(1,k)%rhs_cheby(:,:,:) = 0.0d0
+                Endif
+            Endif
+        Endif
+
+        !/// Pointing
+        indx = 1
+        Do j = 1, n_modes
+            nsub = nsub_modes(j)
+
+            If (equation_set(j,k)%primary) Then
+                equation_set(j,k)%rhs_pointer_cheby => equation_set(1,k)%rhs_cheby(:,:,indx:indx+nsub-1)
+            Else
+                ind = equation_set(j,k)%links(1)
+                equation_set(j,k)%rhs_pointer_cheby => equation_set(1,ind)%rhs_cheby(:,:,indx:indx+nsub-1)
+
+            Endif
+            indx = indx+nsub
+
+        Enddo
+
+
+
+    End Subroutine Allocate_RHS_QI
+
+    Subroutine Prep_RHS_QI(eqind)
+        Use Cosine_Transform, Only : r2r_3D_nVar_dct_forward
+        Use qipack_master_scalareq_d , Only :cheb_Imul_forVarY, dcsr_mul_ddense_3d
+        Implicit None
+        Integer, Intent(In) :: eqind
+        Integer, Allocatable :: orders(:)
+        Integer :: howmany_vars
+        Integer :: ivar, ishape(3), dim1, dim2, dim3, ista
+        Real(kind=8), Allocatable, Dimension(:,:,:) :: onevar_buf, buf2
+        ! Transform RHS to chebyshev space
+
+
+        howmany_vars = equation_set(1,eqind)%nlinks
+        ishape = shape(equation_set(1,eqind)%rhs)
+
+        Write(6,*)'PREPRHS'
+        Call r2r_3D_nVar_dct_forward(equation_set(1,eqind)%rhs, &
+                                     equation_set(1,eqind)%rhs_cheby, &
+                                     equation_set(1,eqind)%nlinks)
+
+        ! wrap this into equation_set structure later (note that ell=0 may differ in order for pressure)
+        Allocate(orders(1:equation_set(1,eqind)%nlinks) )
+        orders(:) = 2
+
+        ! Integrate each right hand side as many times as needed
+        dim1 = (ndim1*2)/3
+        dim2 = ishape(2)
+        dim3 = ishape(3)        
+        Allocate(onevar_buf(dim1, dim2, dim3))        
+        
+        
+        Do ivar = 1, howmany_vars
+            Allocate(buf2      (dim1-orders(ivar), dim2, dim3))  
+            ista = (ivar-1)*dim1
+            onevar_buf = equation_set(1,eqind)%rhs_cheby(ista+1:ista+dim1, :,:)
+            ! Do i2=1,dim2 and i3=1,dim3
+            ! C(:,i2,i3) = d_alpha * A(:,j) * B(j,i2,i3) + d_beta * C(:,i2,i3)
+            Call dcsr_mul_ddense_3D(1.d0, & ! d_sca
+                 cheb_Imul_forVarY(orders(ivar)+1,1,1),& ! A
+                 'n',  onevar_buf, & ! B, 'n'on transposed
+                 0.d0,& !erase buf2, d_beta =0
+                 buf2, dim2, dim3, 1) ! C, dim2, dim3
+            ! now buf2 contains I**order * onevar
+            DeAllocate(buf2)
+        End Do    
+
+
+
+
+        ! wrap this into structure later as well
+        DeAllocate(orders)
+    End Subroutine Prep_RHS_QI
 
 End Module Linear_Solve
 

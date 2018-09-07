@@ -82,7 +82,7 @@ Contains
         ! The equation set RHS's stays allocated throughout - it is effectively how we save the AB terms.
         Call Allocate_RHS(zero_rhs=.true.)
 
-
+        Call Allocate_RHS_QI(zvar, zero_rhs=.true.)
         !////////////////////////////////////////
         ! Read in checkpoint files as appropriate
         If (init_type .eq. -1) Then

@@ -627,7 +627,11 @@ fi
 
 if [ "$USEQIPACK" == "TRUE" ]
 then
-  RAYLEIGH_INC=$RAYLEIGH_INC" -I$QIPACKROOT/include"
+    RAYLEIGH_INC=$RAYLEIGH_INC" -I$QIPACKROOT/include"
+    if [[ $USE_MKL == "TRUE" ]]
+    then
+    RAYLEIGH_INC="-I$FFTWROOT/include -I$RAMKLROOT/include -I$QIPACKROOT/include "
+    fi
 fi
 
 echo " Include flags              :  "$RAYLEIGH_INC
@@ -698,6 +702,12 @@ if [ "$USEQIPACK" == "TRUE" ]
 then
   LIB_FLAGS=$LIB_FLAGS" -L$QIPACKROOT/lib -lqipack"
   FULL_LIB=$FULL_LIB" -L$QIPACKROOT/lib -lqipack"
+    if [[ $USE_MKL == "TRUE" ]]
+    then
+        # MKL's FFTW Interface is incomplete - need dct interface from actual fftw
+        LIB_FLAGS="-L$FFTWROOT/lib -lfftw3 "$LIB_FLAGS
+        FULL_LIB="-L$FFTWROOT/lib -lfftw3  "$FULL_LIB
+    fi
 fi
 
 echo " Library flags              :  "$FULL_LIB

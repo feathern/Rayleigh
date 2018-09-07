@@ -307,6 +307,12 @@ Contains
 			Call Finalize_EMF()
 		endif
 		Call Add_to_All_RHS(wsp%p1b,new_ab_factor)
+
+        !//////////////////////////////////////////////////////
+        ! QIPack
+        Call Prep_RHS_QI(zeq)
+        !///////////////////////////////////////////////////////
+
 		Call Enforce_Boundary_Conditions()
 		Call StopWatch(solve_time)%startclock()
 		Call Implicit_Solve()
