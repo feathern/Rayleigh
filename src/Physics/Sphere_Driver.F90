@@ -6,6 +6,7 @@ Module Sphere_Driver
     Use Diagnostics_Interface, Only : Reboot_Diagnostics
     Use Spherical_IO, Only : time_to_output
 	Use Checkpointing
+    Use Generic_Input
 	Use Controls
 	Use Timers
 	Use Fields
@@ -143,6 +144,10 @@ Contains
                     checkpoint_interval = iteration ! force a checkpoint on final iteration
                 Endif
             Endif
+
+            !//////DEVEL
+            Call Read_Generic()
+            !///////////
 
             Call IsItTimeForACheckpoint(iteration)
             If (ItIsTimeForACheckpoint) Then
