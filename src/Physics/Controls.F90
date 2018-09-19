@@ -17,6 +17,7 @@ Module Controls
     ! how the equations are solved (not what equations are solved).
     Logical :: chebyshev = .true.           ! Set to false to use finite-differences (chebyshev polynomials are used by default)
     Logical :: bandsolve = .false.          ! Set to true to use band solves with the finite-differences
+    Logical :: qi_flag = .false.            ! Experimental control flag for using Quasi-Inverse numerical formulation (Ben Miquel, Nicholas Featherstone, & Kyle Augustson)
     Logical :: static_transpose = .false.   ! When true, transpose buffers for sending/receiving are never de-allocated for spherical buffer objects
     Logical :: static_config = .false.      ! When true, configuration buffers (p3a, s1b, etc.) ar enever de-allocated for spherical buffer objects
     Logical :: use_parity = .true.          ! Possibly defunct - should always be true
@@ -25,7 +26,7 @@ Module Controls
     Logical :: sparsesolve = .false.
 
     Namelist /Numerical_Controls_Namelist/ chebyshev, bandsolve, static_transpose, static_config, &
-            & use_parity, deriv_cluge, pad_alltoall, sparsesolve
+            & use_parity, deriv_cluge, pad_alltoall, sparsesolve, qi_flag ! BM, KA
 
     !////////////////////////////////////////////////////////////////////////////////
     ! Physical Controls
@@ -130,7 +131,6 @@ Contains
         Endif
     End Subroutine Initialize_Controls
 
-
     Subroutine Restore_Physics_Defaults()
         Implicit None
         magnetism = .false.          
@@ -149,6 +149,7 @@ Contains
         Implicit None  
         chebyshev = .false.
         bandsolve = .false.
+        qi_flag = .false.
         static_transpose = .false.
         static_config = .false.
         use_parity = .true.
@@ -174,8 +175,7 @@ Contains
         min_time_step = 1.0d-13
         chk_type = 1
         diagnostic_reboot_interval = -1
-    End Subroutine Restore_Temporal_Defaults   
-
+    End Subroutine Restore_Temporal_Defaults
 
     Subroutine Restore_IO_Defaults
         Implicit None

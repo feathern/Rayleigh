@@ -33,7 +33,7 @@ Module Linear_Solve
         real*8, Allocatable :: lhs(:,:)        ! The matrix to be inverted for this equation
                                                                     ! If an equation set is linked, this is only allocated for the primary 
                                                                     ! equation in the link.
-        !Type(ddia_and_lu) :: LDIA    ! %dia is the sparse matrix in diagonal format: %dia%dat(:,:) are the coefs, %dia%nrow, ncol, nl, nu
+        Type(ddia_and_lu) :: LDIA    ! %dia is the sparse matrix in diagonal format: %dia%dat(:,:) are the coefs, %dia%nrow, ncol, nl, nu
                                      ! %lu(:,:) is the LU factorization
                                      ! %piv(:) are the pivots
 
@@ -190,11 +190,14 @@ Module Linear_Solve
         Allocate(equation_set(1:n_modes,1:n_equations))
         Allocate(Implicit_RHS(1:n_equations))
         Do j = 1, n_equations
+           If (j.eq.zeq) Then
+           Else
             Do i = 1, n_modes
                 Allocate(equation_set(i,j)%coefs(1:n_vars))
                 Allocate(equation_set(i,j)%colblock(1:n_vars))
                 equation_set(i,j)%colblock(:) =0
-            Enddo
+             Enddo
+          EndIf
         Enddo
         Allocate(var_set(1:nvar))
         Do i = 1, nvar
@@ -224,7 +227,6 @@ Module Linear_Solve
             Do j = 1, nlinks    
                 ! Establish the colums within the matrix pertaining to each variable
                 equation_set(mode,eq_links(i))%colblock(var_links(j)) = (j-1)*ndim1    
-
             Enddo
             var_set(var_links(i))%var_start = (i-1)*ndim1+1        ! mode independent for now
             var_set(var_links(i))%var_end = i*ndim1
@@ -236,7 +238,7 @@ Module Linear_Solve
         Implicit None
         Integer, Intent(In) :: mode,eq, var, dorder
 
-        Allocate( equation_set(mode,eq)%coefs(var)%data(1:ndim1,0:dorder)  )
+        Allocate(equation_set(mode,eq)%coefs(var)%data(1:ndim1,0:dorder))
         equation_set(mode,eq)%coefs(var)%data(:,:) = 0.0d0
         equation_set(mode,eq)%solvefor = .true.
         If (dorder .gt. maximum_deriv_order) maximum_deriv_order = dorder
@@ -247,20 +249,24 @@ Module Linear_Solve
         Implicit None
         Integer :: i, j, k
         Do k = 1, n_equations
-            Do j = 1, n_modes
-                If (allocated(equation_set(j,k)%lhs)) equation_set(j,k)%lhs(:,:) = 0.0d0 
-                if (band_solve .or. sparse_solve) then
+           If (qi_flag.and.(k.eq.zeq)) Then
+             
+           Else
+              Do j = 1, n_modes
+                 If (allocated(equation_set(j,k)%lhs)) equation_set(j,k)%lhs(:,:) = 0.0d0 
+                 if (band_solve .or. sparse_solve) then
                     If (allocated(equation_set(j,k)%lhs) .and. equation_set(1,k)%primary) Then
-                        DeAllocate(equation_set(j,k)%lhs)
+                       DeAllocate(equation_set(j,k)%lhs)
                     Endif
-                endif
-
-                Do i = 1, n_vars
+                 endif
+                 
+                 Do i = 1, n_vars
                     If(allocated(equation_set(j,k)%coefs(i)%data)) Then
-                        equation_set(j,k)%coefs(i)%data(:,:) = 0.0d0
+                       equation_set(j,k)%coefs(i)%data(:,:) = 0.0d0
                     Endif
-                Enddo
-            Enddo
+                 Enddo
+              Enddo
+           EndIf
         Enddo
     End Subroutine Reset_Equation_Coefficients
 
@@ -282,6 +288,7 @@ Module Linear_Solve
     
         j = mode_ind
         Do k = 1, n_equations
+           If (k.eq.
             If (equation_set(j,k)%solvefor) Then        
                 ! Only DeAllocate matrix information for modes we actually solve for
                 If (equation_set(j,k)%primary) Then
@@ -297,7 +304,6 @@ Module Linear_Solve
                 Endif
             Endif
         Enddo
-
     End Subroutine DeAllocate_LHS
 
     Subroutine Allocate_LHS(mode_ind)
@@ -387,6 +393,48 @@ Module Linear_Solve
 
 
     !===========================
+    !  Matrix Solve Routine for QI PACK (Ben M. and Kyle A.)
+    Subroutine Implicit_Solve_QI
+        Implicit None
+        Integer :: j, k,maxlink
+        If (band_solve) Then
+            maxlink = 1
+            Do k = 1, n_equations
+                maxlink = max(maxlink,equation_set(1,k)%nlinks)
+            Enddo
+            if (maxlink .gt. 1) Allocate(temp_rhs(1:ndim1*maxlink,1:ndim2,1:n_modes_total))
+        Endif
+        Do k = 1, n_equations
+           If (k.eq.zeq) Then
+              Call wrap_LUsolve_band_d(A, b, nrhs, ldb, verb)
+           Else
+              If (band_solve .and. (equation_set(1,k)%nlinks .gt. 1) .and. equation_set(1,k)%primary) Then
+                 Call Band_Arrange_RHS(k)
+              Endif
+              Do j = 1, n_modes
+                 If (equation_set(j,k)%primary .and. equation_set(j,k)%solvefor) Then
+                    If (band_solve) Then
+                       Call lu_solve_band(Equation_set(j,k)%LHS , Equation_Set(j,k)%rhs_pointer , Equation_Set(j,k)%Pivot)
+                    Else If (sparse_solve) Then
+                       !Call LU_Solve_Sparse(j,k)
+                       Call Equation_set(j,k)%LU_Solve_Sparse()
+                    Else
+                       Call lu_solve_full(Equation_set(j,k)%LHS , Equation_Set(j,k)%rhs_pointer , Equation_Set(j,k)%Pivot)
+                    Endif
+                 Endif
+              Enddo
+              If (band_solve .and. (equation_set(1,k)%nlinks .gt. 1) .and. equation_set(1,k)%primary) Then
+                 Call Band_ReArrange_RHS(k)
+              Endif
+          EndIf
+        Enddo
+        If (band_solve) Then
+            if (maxlink .gt. 1) DeAllocate(temp_rhs)
+        Endif
+
+    End Subroutine Implicit_Solve_QI
+
+    !===========================
     !  Matrix Solve Routine
     Subroutine Implicit_Solve
         Implicit None
@@ -423,7 +471,7 @@ Module Linear_Solve
         Endif
 
     End Subroutine Implicit_Solve
-
+    
     Subroutine LU_Decompose_Matrices()
         Implicit None
         Integer :: j, k
@@ -1550,9 +1598,8 @@ Module Linear_Solve
         dim3 = ishape(3)        
         Allocate(onevar_buf(dim1, dim2, dim3))        
         
-        
         Do ivar = 1, howmany_vars
-            Allocate(buf2      (dim1-orders(ivar), dim2, dim3))  
+            Allocate(buf2(dim1-orders(ivar), dim2, dim3))  
             ista = (ivar-1)*dim1
             onevar_buf = equation_set(1,eqind)%rhs_cheby(ista+1:ista+dim1, :,:)
             ! Do i2=1,dim2 and i3=1,dim3
@@ -1563,11 +1610,9 @@ Module Linear_Solve
                  0.d0,& !erase buf2, d_beta =0
                  buf2, dim2, dim3, 1) ! C, dim2, dim3
             ! now buf2 contains I**order * onevar
+            equation_set(1,eqind)%rhs_cheby(ista+1:ista+dim1,:,:) = buf2
             DeAllocate(buf2)
         End Do    
-
-
-
 
         ! wrap this into structure later as well
         DeAllocate(orders)
