@@ -324,7 +324,85 @@ Contains
 
           !Kyle and Ben, adding construction of QI_MMDTL
           If (qi_flag) Then
+             Allocate(arr_var_coefs(shape(amp,1),order_max+1))
              !Ben will figure out how to do this.
+             !=====================================================
+             !=====================================================
+             ! ORDER ZERO
+             iorder = 0
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! Start by summing all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             Allocate(all_amp(shape(amp)))
+             all_amp=0.d0
+             If (inertia) Then
+                ! (from u_{t+1} in CN method -- no dt factor)
+                amp = 1.0d0
+                all_amp = all_amp + amp
+             Endif
+             !amp = H_Laplacian
+             amp = H_Laplacian*nu*diff_factor
+             all_amp = all_amp + amp
+             ! Variation of rho and nu
+             amp = Z_Diffusion_Coefs_0*diff_factor
+             all_amp = all_amp + amp
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! DCT the sum of all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             all_amp_fourier = a_1d_dct_of(all_amp)
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! store the DCT in a rank 2 array.
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             arr_var_coefs(:,iorder) = all_amp_fourier
+             !=====================================================
+             !=====================================================
+             ! ORDER ONE
+             iorder = 1
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! Start by summing all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             amp = Z_Diffusion_Coefs_1*diff_factor
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! DCT the sum of all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             all_amp_fourier = a_1d_dct_of(amp)
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! store the DCT in a rank 2 array.
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             arr_var_coefs(:,iorder) = all_amp_fourier
+             !=====================================================
+             !=====================================================
+             ! ORDER TWO
+             iorder = 2
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! Start by summing all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             amp = nu
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! DCT the sum of all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             all_amp_fourier = a_1d_dct_of(amp)
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! store the DCT in a rank 2 array.
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             arr_var_coefs(:,iorder) = all_amp_fourier
+             !=====================================================
+             Call assemble_stiffness_mat_varcoefs (equation_set(lp,zeq)%QI_MMLDT, trun_degree, order_max, arr_var_coefs, cheb_i, cheb_dj, cheb_mul, N)
+
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
           Else
              If (inertia) Then
                 ! (from u_{t+1} in CN method -- no dt factor)

@@ -351,21 +351,21 @@ Contains
     Do k = 1, n_equations
        If (equation_set(j,k)%solvefor) Then        ! Only Allocate matrix information for modes we actually solve for
           If (qi_flag.and.(k.eq.zeq)) Then !Added by Kyle A., QI implementation allocation here.
-             If (equation_set(j,k)%primary) Then
-                ndim = ndim1*equation_set(j,k)%nlinks
-                If(.not.Allocated(equation_set(j,k)%QI_MMDTL%dia%dat)) Allocate(equation_set(j,k)%QI_MMDTL%dia%dat(1:ndim,1:ndim))
-                If(.not.Allocated(equation_set(j,k)%QI_MPDTL%%dia%dat)) Allocate(equation_set(j,k)%QI_MPDTL%dia%dat(1:ndim,1:ndim))
-                
-                If(.not.Allocated(equation_set(j,k)%QI_MMDTL%lu)) Allocate(equation_set(j,k)%QI_MMDTL%lu(1:ndim,1:ndim))
-                If(.not.Allocated(equation_set(j,k)%QI_MPDTL%lu)) Allocate(equation_set(j,k)%QI_MPDTL%lu(1:ndim,1:ndim))
-             
-                If(.not.Allocated(equation_set(j,k)%QI_MMDTL%piv)) Allocate(equation_set(j,k)%QI_MMDTL%piv(1:ndim))
-                If(.not.Allocated(equation_set(j,k)%QI_MPDTL%piv)) Allocate(equation_set(j,k)%QI_MPDTL%piv(1:ndim))
-                equation_set(j,k)%mpointer => equation_set(j,k)%QI_MMDTL%dat
-             Else
-                ind = equation_set(j,k)%links(1)
-                equation_set(j,k)%mpointer => equation_set(j,ind)%QI_MMDTL%dia%dat !Not sure about this one... probably should be %dat or %lhs
-             EndIf
+             !If (equation_set(j,k)%primary) Then
+                !ndim = ndim1*equation_set(j,k)%nlinks
+                !If(.not.Allocated(equation_set(j,k)%QI_MMDTL%dia%dat)) Allocate(equation_set(j,k)%QI_MMDTL%dia%dat(1:ndim,1:ndim))
+                !If(.not.Allocated(equation_set(j,k)%QI_MPDTL%%dia%dat)) Allocate(equation_set(j,k)%QI_MPDTL%dia%dat(1:ndim,1:ndim))
+                !
+                !If(.not.Allocated(equation_set(j,k)%QI_MMDTL%lu)) Allocate(equation_set(j,k)%QI_MMDTL%lu(1:ndim,1:ndim))
+                !If(.not.Allocated(equation_set(j,k)%QI_MPDTL%lu)) Allocate(equation_set(j,k)%QI_MPDTL%lu(1:ndim,1:ndim))
+             !
+                !If(.not.Allocated(equation_set(j,k)%QI_MMDTL%piv)) Allocate(equation_set(j,k)%QI_MMDTL%piv(1:ndim))
+                !If(.not.Allocated(equation_set(j,k)%QI_MPDTL%piv)) Allocate(equation_set(j,k)%QI_MPDTL%piv(1:ndim))
+                !equation_set(j,k)%mpointer => equation_set(j,k)%QI_MMDTL%dat
+             !Else
+                !ind = equation_set(j,k)%links(1)
+                !equation_set(j,k)%mpointer => equation_set(j,ind)%QI_MMDTL%dia%dat !Not sure about this one... probably should be %dat or %lhs
+             !EndIf
           Else
              If (equation_set(j,k)%primary) Then
                 ndim = ndim1*equation_set(j,k)%nlinks
