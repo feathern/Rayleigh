@@ -423,6 +423,16 @@ Contains
                     & ref%Coriolis_Coeff*sintheta(t)*FIELDSP(IDX,vphi)*R_squared(r)
             END_DO
             !$OMP END PARALLEL DO
+            
+            If (centrifugal_force) Then
+                !$OMP PARALLEL DO PRIVATE(t,r,k)
+                DO_IDX
+                    RHSP(IDX,wvar) = RHSP(IDX,wvar) + &
+                        ref%Centrifugal_Coeff*sin2theta(t)* &
+                        radius(r)*R_squared(r)
+                END_DO
+                !$OMP END PARALLEL DO
+            Endif
         Endif
 
 
@@ -675,6 +685,18 @@ Contains
                 RHSP(IDX,pvar) = RHSP(IDX,pvar)- ref%Coriolis_Coeff*costheta(t)*FIELDSP(IDX,vphi)
             END_DO
             !$OMP END PARALLEL DO
+
+            If (centrifugal_force) Then
+                !$OMP PARALLEL DO PRIVATE(t,r,k)
+                DO_IDX
+                    RHSP(IDX,wvar) = RHSP(IDX,wvar) + &
+                        ref%Centrifugal_Coeff*sin2theta(t)* &
+                        radius(r)*R_squared(r)
+                END_DO
+                !$OMP END PARALLEL DO
+            Endif
+
+
         Endif
 
         ! Multiply advection/coriolis pieces by rho
