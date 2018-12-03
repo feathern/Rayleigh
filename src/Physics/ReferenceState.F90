@@ -127,7 +127,7 @@ Module ReferenceState
             & gravity_power, heating_factor, heating_r0, custom_reference_file, &
             & custom_reference_type, cooling_type, cooling_r0, cooling_factor, &
             & Dissipation_Number, Modified_Rayleigh_Number, Heating_Integral, &
-            & Dimensional, NonDimensional_Anelastic
+            & Dimensional, NonDimensional_Anelastic, Froude_Number
 Contains
 
     Subroutine Initialize_Reference()
