@@ -52,6 +52,7 @@ Module ReferenceState
 
         Real*8 :: Coriolis_Coeff ! Multiplies z_hat x u in momentum eq.
         Real*8 :: Lorentz_Coeff ! Multiplies (Del X B) X B in momentum eq.
+        Real*8 :: Centrifugal_Coeff
         Real*8, Allocatable :: Buoyancy_Coeff(:)    ! Multiplies {S,T} in momentum eq. ..typically = gravity/cp
         Real*8, Allocatable :: dpdr_w_term(:)  ! multiplies d_by_dr{P/rho} in momentum eq.
         Real*8, Allocatable :: pressure_dwdr_term(:) !multiplies l(l+1)/r^2 (P/rho) in Div dot momentum eq.
@@ -99,6 +100,7 @@ Module ReferenceState
     Real*8 :: gravity_power           = 0.0d0
     Real*8 :: Dissipation_Number      = 0.0d0
     Real*8 :: Modified_Rayleigh_Number = 0.0d0
+    Real*8 :: Froude_Number = 0.0d0
     Logical :: Dimensional_Reference = .false.  ! Changed depending on reference state specified
     Character*120 :: custom_reference_file ='nothing'
     Integer :: custom_reference_type = 1
@@ -221,6 +223,9 @@ Contains
         Do i = 1, N_R
             ref%Buoyancy_Coeff(i) = amp*(radius(i)/radius(1))**gravity_power
         Enddo
+        If (Centrifugal_Force) Then
+            ref%Centrifugal_Coeff = Froude_Number*Rayleigh_Number/Prandtl_Number
+        Endif
 
         pressure_specific_heat = 1.0d0
         Call initialize_reference_heating()
