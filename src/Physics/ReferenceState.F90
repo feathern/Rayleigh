@@ -277,8 +277,8 @@ Contains
             v0_sq = maxval(paf_v2)
 
             !nondimensionalize
-            paf_v2 = paf_v2/v0_sq * Rayleigh_Number/Prandtl_Number
-            paf_gv2 = paf_gv2/v0_sq *Rayleigh_Number/Prandtl_Number*2
+            paf_v2 = paf_v2/v0_sq * Rayleigh_Number/Prandtl_Number*2
+            paf_gv2 = paf_gv2/v0_sq *Rayleigh_Number/Prandtl_Number
 
 
             Allocate(array2d(1:N_R,5))
