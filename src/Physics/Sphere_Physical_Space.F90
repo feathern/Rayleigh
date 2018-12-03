@@ -424,15 +424,15 @@ Contains
             END_DO
             !$OMP END PARALLEL DO
             
-            If (centrifugal_force) Then
-                !$OMP PARALLEL DO PRIVATE(t,r,k)
-                DO_IDX
-                    RHSP(IDX,wvar) = RHSP(IDX,wvar) + &
-                        ref%Centrifugal_Coeff*sin2theta(t)* &
-                        radius(r)*R_squared(r)
-                END_DO
-                !$OMP END PARALLEL DO
-            Endif
+            !If (centrifugal_force) Then
+            !    !$OMP PARALLEL DO PRIVATE(t,r,k)
+            !    DO_IDX
+            !        RHSP(IDX,wvar) = RHSP(IDX,wvar) + &
+            !            ref%Centrifugal_Coeff*sin2theta(t)* &
+            !            radius(r)*R_squared(r)
+            !    END_DO
+            !    !$OMP END PARALLEL DO
+            !Endif
         Endif
 
 
@@ -686,15 +686,15 @@ Contains
             END_DO
             !$OMP END PARALLEL DO
 
-            If (centrifugal_force) Then
-                !$OMP PARALLEL DO PRIVATE(t,r,k)
-                DO_IDX
-                    RHSP(IDX,wvar) = RHSP(IDX,wvar) + &
-                        ref%Centrifugal_Coeff*sin2theta(t)* &
-                        radius(r)*R_squared(r)
-                END_DO
-                !$OMP END PARALLEL DO
-            Endif
+            !If (centrifugal_force) Then
+            !    !$OMP PARALLEL DO PRIVATE(t,r,k)
+            !    DO_IDX
+            !        RHSP(IDX,wvar) = RHSP(IDX,wvar) + &
+            !            ref%Centrifugal_Coeff*sin2theta(t)* &
+            !            radius(r)*R_squared(r)
+            !    END_DO
+            !    !$OMP END PARALLEL DO
+            !Endif
 
 
         Endif

@@ -186,7 +186,7 @@ Contains
         Character*12 :: dstring
         Character*8 :: dofmt = '(ES12.5)'
         ! devel variables (see note at top regarding devel)
-        Real*8 :: pafk
+        Real*8 :: pafk, v0_sq
         Real*8, Allocatable :: sink(:), cosk(:)
         Real*8, Allocatable :: array2d(:,:)
         Character*120 :: dvf
@@ -274,9 +274,12 @@ Contains
 
             paf_gv2 = paf_gv2-4.0d0*paf_v2*One_Over_R
 
-            !renormalize (do gv2 first!)
-            paf_gv2 = paf_gv2/maxval(paf_v2) *Rayleigh_Number
-            paf_v2 = paf_v2/maxval(paf_v2) * Rayleigh_Number
+            v0_sq = maxval(paf_v2)
+
+            !nondimensionalize
+            paf_v2 = paf_v2/v0_sq * Rayleigh_Number/Prandtl_Number
+            paf_gv2 = paf_gv2/v0_sq *Rayleigh_Number/Prandtl_Number*2
+
 
             Allocate(array2d(1:N_R,5))
             array2d(:,1) = radius(:)
