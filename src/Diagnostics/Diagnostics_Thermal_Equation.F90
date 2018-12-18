@@ -54,6 +54,13 @@ Contains
         Allocate(rhot(1:N_R), rhotk(1:N_R))
         rhot = ref%density*ref%temperature
         rhotk = rhot*kappa
+        !If (my_rank .eq. 0) Then
+        !    Write(6,*)'rhotk: ', rhotk
+        !    Write(6,*)' '
+        !    Write(6,*)'dlnrho: ', ref%dlnrho
+        !    Write(6,*)'dlnt  : ', ref%dlnt
+        !    Write(6,*)'dlnkappa :, ',dlnkappa
+        !Endif
 
         !////////////////////////////////////////////////////////////////////////
         ! Diffusive terms deriving from the divergence of the conductive flux
@@ -112,7 +119,7 @@ Contains
                 DO_PSI
                     tmp1(PSI) = tmp1(PSI)+qty(PSI)
                 END_DO
-                Call Add_Quantity(qty)
+                Call Add_Quantity(tmp1)
             Endif
 
         Endif
@@ -172,7 +179,7 @@ Contains
                 DO_PSI
                     tmp1(PSI) = tmp1(PSI)+qty(PSI)
                 END_DO
-                Call Add_Quantity(qty)
+                Call Add_Quantity(tmp1)
             Endif
 
         Endif
@@ -231,7 +238,7 @@ Contains
                 DO_PSI
                     tmp1(PSI) = tmp1(PSI)+qty(PSI)
                 END_DO
-                Call Add_Quantity(qty)
+                Call Add_Quantity(tmp1)
             Endif
 
         Endif
