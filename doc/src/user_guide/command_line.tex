@@ -1,0 +1,40 @@
+\clearpage
+\section{Command Line Arguments}\label{sec:cmd}
+The defacto method for controlling Rayleigh simulation options is through the main\_input file.  Several options may also be specified at the command line.  Optional values specified at the command line take precedence over any redundant values specified through main\_input.  These command line options are intended to help with scripting multiple Rayleigh runs, and are specified using the format:
+\begin{lstlisting}
+mpiexec -np 8 ./rayleigh.opt -option_1 value_1 ... -option_N value_N  
+\end{lstlisting}
+For example, if you wish to use the command line interface to set N\_R = 128, Rayleigh\_Number=1,000,000 and Prandtl\_Number=1, you would use the following syntax:
+\begin{lstlisting}
+mpiexec -np 8 ./rayleigh.opt -nr 128 -Ra 1d6 -Pr 1.0  
+\end{lstlisting}
+A summary of options and their equivalent, main\_input namelist parameter are provided in Table \ref{table:cmd_opt}.  Note that flags are \textit{case sensitive}.  
+\begin{table}
+\centering
+\begin{tabular} {|l | l | l |}
+\hline
+Command Line Alias & Main\_Input Parameter & Value Type  \\
+\hline
+ -new\_iter  & new\_iteration            & Integer \\
+ -nprow      & nprow                     & Integer\\
+ -npcol      & npcol                     & Integer  \\
+ -npout      & npout                     & Integer \\
+ -niter      & max\_iterations           & Integer  \\
+ -nr         & N\_R                      & Integer\\
+ -ntheta     & N\_theta                  & Integer   \\
+ -aspect     & aspect\_ratio             & Real \\
+ -lmax       & l\_max                    & Integer   \\
+ -pata       & pad\_alltoall             & Integer  \\
+ -altc       & alt\_check                & Integer \\
+  -jobinfo   & jobinfo\_file             & String \\
+ -Ra         & Rayleigh\_Number          & Real \\
+ -E          & Ekman\_Number             & Real \\
+ -Pr         & Prandtl\_Number           & Real \\
+ -Pm         & Magnetic\_Prandtl\_Number & Real \\
+ -init       & init\_type                & Integer \\
+ -mag-init   & magnetic\_init\_type      & Integer \\
+\hline
+\end{tabular}
+\caption{\label{table:cmd_opt} Command line flags and their main\_input equivalents that may be specified in Rayleigh.  Flags are case-sensitive.  Options specified at the command line supercede redundant values specified in main\_input (if any).}
+\end{table}
+

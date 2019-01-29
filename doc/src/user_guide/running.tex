@@ -10,6 +10,8 @@ Whenever you run a new simulation, a similar series of steps must be performed. 
 \item Examine output and restart simulation as necessary
 \end{enumerate}
 
+A simulation's behavior, including run initiation, output etc. can be controlled through the main\_input file.  In addition subset of the options available through main\_input may also be specified at the command line.  Any value specified at the command line takes precedence over that specified in the main\_input file.   Several examples of command line parameters are provided in throughout this manual.  Available command line parameters are described in full in Section \ref{sec:cmd}.
+
 \subsection{Preparation}
 Each simulation run using Rayleigh should have its own directory.  The code is run from within that directory, and any output is stored in various subdirectories created by Rayleigh at run time.  Wherever you create your simulation directory, ensure that you have sufficient space to store the output.
 
@@ -135,5 +137,4 @@ min_time_step = 1.0d-13
 /
 \end{lstlisting}
 
-\subsection{Command Line Arguments}
-Initial text. 
+
