@@ -38,7 +38,7 @@ Module Parallel_Framework
     !
     Integer, Parameter, Public :: Cartesian = 1, Cylindrical = 2, Spherical = 3
     Integer, Parameter, Public :: p1 =1 ,s1 = 2, p2 = 3,s2a =4, p3a=5,p3b=6
-    Public :: Load_Config, Full_Barrier, Main_MPI_Init
+    Public :: Load_Config, Full_Barrier, Main_MPI_Init, Subrun_MPI_Init
     Character*6 :: ifmt = '(i4.4)' ! Integer format for indicating processor tag numbers in output
     Type, Public :: Parallel_Interface
         Type(Load_Config) :: my_1p, my_2p, my_3p    !  like my_r, my_theta in ASH
@@ -62,6 +62,7 @@ Module Parallel_Framework
 
         Contains
         Procedure :: Init_World_Comm
+        Procedure :: Init_Gcomm
         Procedure :: Init => Initialize_Parallel_Interface
         Procedure :: openmp_init
         Procedure :: Exit => Finalize_Framework
@@ -101,6 +102,14 @@ Contains
         ret_rank = pfi%wcomm%rank
     End Subroutine Main_MPI_Init
 
+    Subroutine Subrun_MPI_Init(ret_rank, ncpus)
+        Implicit None
+        Integer, Intent(Out) :: ret_rank
+        Integer, Intent(In)  :: ncpus(:)
+        Call pfi%init_gcomm(ncpus)
+        ret_rank = pfi%gcomm%rank
+    End Subroutine Subrun_MPI_Init
+
     Subroutine Init_World_Comm(self)
         !This handles initialization of MPI_COMM_WORLD
         Implicit None
@@ -109,6 +118,27 @@ Contains
         self%wcomm = init_main_group(error)
     End Subroutine Init_World_Comm
 
+    !///////////////
+    Subroutine Init_Gcomm(self, ncpus)
+        !Initializes the global communicator (gcomm)
+        !This communicator contains all processes running
+        !the same simulation.
+        Implicit None
+        Integer, Intent(In) :: ncpus(:)
+        Integer :: error
+        Class(Parallel_Interface) :: self       
+        If (size(ncpus) .gt. 1) Then
+            !Multiple run Mode
+            self%gcomm = Init_SubGroup(self%wcomm,ncpus,error)
+        Else
+            !Normal Mode -- gcomm is mirror of wcomm/MPI_COMM_WORLD
+            self%gcomm%rank = self%wcomm%rank
+            self%gcomm%np = self%wcomm%np
+            self%gcomm%comm = self%wcomm%comm
+
+        Endif
+    End Subroutine Init_Gcomm
+    !//////////////
 
     Subroutine Initialize_Parallel_Interface(self, pars,ncpus,init_only)
         Implicit None
@@ -136,16 +166,17 @@ Contains
         Else
             ! get the process grid info from the environment
         Endif
-        If (size(ncpus) .gt. 1) Then
-            !Multiple run Mode
-            self%gcomm = Init_SubGroup(self%wcomm,ncpus,error)
-        Else
-            !Normal Mode -- gcomm is mirror of wcomm/MPI_COMM_WORLD
-            self%gcomm%rank = self%wcomm%rank
-            self%gcomm%np = self%wcomm%np
-            self%gcomm%comm = self%wcomm%comm
 
-        Endif
+        !If (size(ncpus) .gt. 1) Then
+        !    !Multiple run Mode
+        !    self%gcomm = Init_SubGroup(self%wcomm,ncpus,error)
+        !Else
+        !    !Normal Mode -- gcomm is mirror of wcomm/MPI_COMM_WORLD
+        !    self%gcomm%rank = self%wcomm%rank
+        !    self%gcomm%np = self%wcomm%np
+        !    self%gcomm%comm = self%wcomm%comm
+        !Endif
+
         If (self%gcomm%rank .eq. 0) Then
 
             Call stdout%print(" //////////////////////////////////////")

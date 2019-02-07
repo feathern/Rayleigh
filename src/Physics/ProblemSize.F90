@@ -153,7 +153,8 @@ Contains
             cpu_tmp(1) = ncpu
             Call pfi%init(ppars,cpu_tmp,grid_error)
         Endif
-        my_rank = pfi%gcomm%rank
+        !my_rank = pfi%gcomm%rank
+        WRite(6,*)'myrank: ', my_rank, global_rank
         my_row_rank = pfi%rcomm%rank
         my_column_rank = pfi%ccomm%rank
 

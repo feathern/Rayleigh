@@ -607,7 +607,7 @@ Contains
 
         If (benchmark_mode .gt. 0) Then
         If (mod(iteration,integration_interval) .eq. 0) Then
-            !Write(6,*)'Integrating!'
+            Write(6,*)'Integrating!'
             !First we grab the volume-integrated quantities
 
             !We keep a time-series of volume-integrated quantities in memory

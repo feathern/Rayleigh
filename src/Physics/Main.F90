@@ -48,10 +48,11 @@ Program Main!
 
     Implicit None
 
-    Call Main_MPI_Init(global_rank)   !Initialize MPI
+    Call Main_MPI_Init(global_rank)   !Initialize MPI_COMM_WORLD
 
     Call Check_Run_Mode()   !This needs to be done before ever reading main input (handles multiple runs)
 
+    Call Subrun_MPI_Init(my_rank, run_cpus)   !Initialize subcommunicators (if running multiple sims)
 
     Call Main_Input()
     Call Benchmark_Input_Reset() ! Sets run parameters to benchmark parameters if benchmark_mode .ge. 0
@@ -78,6 +79,7 @@ Contains
 
         Call Initialize_Directory_Structure()
 
+        Write(6,*)'1...'
         Call Initialize_Benchmarking()
 
         Call Initialize_FFts()
@@ -85,7 +87,7 @@ Contains
 
         Call Initialize_Boundary_Conditions()
         Call Initialize_Transport_Coefficients()
-
+        WRite(6,*)'2...'
         !====================== STABLE
         If (stable_flag) Then
             Call Initialize_MeanFLows()
@@ -97,8 +99,11 @@ Contains
 
         Call Initialize_Field_Structure()
         Call Initialize_Diagnostics()
+        WRite(6,*)'3...'
 
         Call Full_Barrier()
+
+        WRite(6,*)'4...'
 
         Call Linear_Init()
         Call Initialize_Checkpointing()

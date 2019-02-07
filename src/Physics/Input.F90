@@ -20,7 +20,7 @@
 
 Module Input
     Use ProblemSize,  Only : problemsize_namelist, nprow, npcol, n_r,n_theta, npout, global_rank, &
-                             & ncpu_global, aspect_ratio, l_max
+                             & ncpu_global, aspect_ratio, l_max, my_rank
     Use Controls,     Only : temporal_controls_namelist, numerical_controls_namelist, &
                             & physical_controls_namelist, max_iterations, pad_alltoall, &
                             & multi_run_mode, nruns, rundirs, my_path, run_cpus, &
@@ -47,7 +47,14 @@ Contains
     Subroutine Main_Input()
         Implicit None
         Character*120 :: input_file
+        Integer :: filesize
         input_file = Trim(my_path)//'main_input'
+
+
+        !If (my_rank .eq. 0) Then
+        !    Inquire(file=input_file,size=filesize)
+        !    Write(6,*)'Filesize: ', filesize
+        !Endif
 
         ! First read the main input file
         Open(unit=20, file=input_file, status="old", position="rewind")
