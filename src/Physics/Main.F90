@@ -79,7 +79,7 @@ Contains
 
         Call Initialize_Directory_Structure()
 
-        Write(6,*)'1...'
+
         Call Initialize_Benchmarking()
 
         Call Initialize_FFts()
@@ -87,7 +87,7 @@ Contains
 
         Call Initialize_Boundary_Conditions()
         Call Initialize_Transport_Coefficients()
-        WRite(6,*)'2...'
+
         !====================== STABLE
         If (stable_flag) Then
             Call Initialize_MeanFLows()
@@ -99,11 +99,11 @@ Contains
 
         Call Initialize_Field_Structure()
         Call Initialize_Diagnostics()
-        WRite(6,*)'3...'
+
 
         Call Full_Barrier()
 
-        WRite(6,*)'4...'
+
 
         Call Linear_Init()
         Call Initialize_Checkpointing()

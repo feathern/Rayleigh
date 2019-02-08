@@ -24,7 +24,8 @@ Module Input
     Use Controls,     Only : temporal_controls_namelist, numerical_controls_namelist, &
                             & physical_controls_namelist, max_iterations, pad_alltoall, &
                             & multi_run_mode, nruns, rundirs, my_path, run_cpus, &
-                            & io_controls_namelist, new_iteration, jobinfo_file
+                            & io_controls_namelist, new_iteration, jobinfo_file, &
+                            & benchmark_mode
     Use Spherical_IO, Only : output_namelist
     Use BoundaryConditions, Only : boundary_conditions_namelist
     Use Initial_Conditions, Only : initial_conditions_namelist, alt_check, init_type, magnetic_init_type
@@ -48,13 +49,29 @@ Contains
         Implicit None
         Character*120 :: input_file
         Integer :: filesize
+        Character, Allocatable :: ichars(:)
         input_file = Trim(my_path)//'main_input'
 
 
-        !If (my_rank .eq. 0) Then
-        !    Inquire(file=input_file,size=filesize)
-        !    Write(6,*)'Filesize: ', filesize
-        !Endif
+        If (my_rank .eq. 0) Then
+            Write(6,*)'In main_input -- my rank is: ', my_rank, global_rank
+            Inquire(file=input_file,size=filesize)
+            Write(6,*)'Filesize: ', filesize
+            Allocate(ichars(filesize))
+            Open(unit=20, file=input_file, status="old", position="rewind", access="stream")
+            Read(20)ichars
+            Close(20)
+            If (global_rank .eq. 0) Then
+                n_r = 2
+                n_theta = 43
+                Write(6,*)'prior: ', benchmark_mode
+                Read(ichars,nml=physical_controls_namelist)
+                Write(*,physical_controls_namelist)
+            Endif
+
+            
+
+        Endif
 
         ! First read the main input file
         Open(unit=20, file=input_file, status="old", position="rewind")

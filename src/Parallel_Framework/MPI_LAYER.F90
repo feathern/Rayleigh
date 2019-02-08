@@ -110,9 +110,7 @@ Contains
         Implicit None
         Type(communicator) :: grp
         Integer :: ierr
-        Write(6,*)'callin barrier...'
         Call MPI_Barrier(grp%comm,ierr)
-        Write(6,*)'ierr = ', ierr
     End Subroutine Barrier
 
 End Module MPI_LAYER
