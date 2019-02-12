@@ -126,6 +126,7 @@ Contains
         !Character(len=flen) , Intent(InOut) :: file_lines  ! infile is read into file_lines (newlines removed)
         Integer ::  j, ij, funit, istat
         Character(len=llen) :: one_line
+        Logical :: nocomment
 
 
         Do j = 1, len(input_lines)
@@ -144,10 +145,18 @@ Contains
         Do While (istat .eq. 0)
             Read(unit=funit,fmt='(a)',iostat=istat)one_line
             If (istat .eq. 0) then
-                Do j = 1, len(one_line)
-                    if (one_line(j:j) .eq. '!') Write(6,*)'UGH!'
-                    input_lines(ij:ij) = one_line(j:j)
+                nocomment = .true.
+                j = 1
+                Do While (( j .le. len(one_line)) .and. nocomment )
+                    If (one_line(j:j) .eq. '!') Then
+                        Write(6,*)'UGH!'
+                        input_lines(ij:ij) = ' '
+                        nocomment = .false.
+                    Else
+                        input_lines(ij:ij) = one_line(j:j)
+                    Endif
                     ij = ij+1
+                    j = j + 1
                 Enddo
             Endif
         Enddo
