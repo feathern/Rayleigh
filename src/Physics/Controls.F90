@@ -108,11 +108,12 @@ Module Controls
     !///////////////////////////////////////////////////////////////////////////
     ! I/O Controls
     ! What is normally sent to standard out can, if desired, be sent to a file instead
-    Integer :: stdout_flush_interval = 50  ! Lines stored before stdout buffer is flushed to stdout_unit
+    Integer       :: stdout_flush_interval = 50  ! Lines stored before stdout buffer is flushed to stdout_unit
     Character*120 :: stdout_file = 'nofile'
     Character*120 :: jobinfo_file = 'jobinfo.txt'
+    Logical       :: serial_main_input = .False.  ! Setting to true forces each rank to read main_input. 
 
-    Namelist /IO_Controls_Namelist/ stdout_flush_interval,stdout_file,jobinfo_file
+    Namelist /IO_Controls_Namelist/ stdout_flush_interval,stdout_file,jobinfo_file, serial_main_input
 
     !///////////////////////////////////////////////////////////////////////////
     ! This array may be used for various purposes related to passing messages to the

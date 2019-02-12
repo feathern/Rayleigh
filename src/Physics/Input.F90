@@ -25,7 +25,7 @@ Module Input
                             & physical_controls_namelist, max_iterations, pad_alltoall, &
                             & multi_run_mode, nruns, rundirs, my_path, run_cpus, &
                             & io_controls_namelist, new_iteration, jobinfo_file, &
-                            & benchmark_mode
+                            & benchmark_mode, serial_main_input
     Use Spherical_IO, Only : output_namelist
     Use BoundaryConditions, Only : boundary_conditions_namelist
     Use Initial_Conditions, Only : initial_conditions_namelist, alt_check, init_type, magnetic_init_type
@@ -38,6 +38,10 @@ Module Input
 
     Implicit None
 
+    Integer, Parameter :: mx_line_len = 512
+    Integer, Parameter :: mx_lines = 512
+    Character(len=512*512) :: input_lines
+
     Interface Read_CMD_Line
         Module Procedure Read_CMD_Integer, Read_CMD_Double, Read_CMD_Logical
         Module Procedure Read_CMD_String
@@ -47,51 +51,111 @@ Contains
 
     Subroutine Main_Input()
         Implicit None
+
         Character*120 :: input_file
-        Integer :: filesize
-        Character, Allocatable :: ichars(:)
+
         input_file = Trim(my_path)//'main_input'
 
 
-        If (my_rank .eq. 0) Then
-            Write(6,*)'In main_input -- my rank is: ', my_rank, global_rank
-            Inquire(file=input_file,size=filesize)
-            Write(6,*)'Filesize: ', filesize
-            Allocate(ichars(filesize))
-            Open(unit=20, file=input_file, status="old", position="rewind", access="stream")
-            Read(20)ichars
-            Close(20)
-            If (global_rank .eq. 0) Then
-                n_r = 2
-                n_theta = 43
-                Write(6,*)'prior: ', benchmark_mode
-                Read(ichars,nml=physical_controls_namelist)
-                Write(*,physical_controls_namelist)
+        If (serial_main_input) Then
+            ! Each rank reads the main_input file (not recommended).
+            If (my_rank .eq. 0) Then
+                Write(6,*)' '
+                Write(6,*)'Serial input...'
+                Write(6,*)' '
             Endif
 
-            
+            Open(unit=20, file=input_file, status="old", position="rewind")
+
+            Read(unit=20, nml=problemsize_namelist)
+            Read(unit=20, nml=numerical_controls_namelist)
+            Read(unit=20, nml=physical_controls_namelist)
+            Read(unit=20, nml=temporal_controls_namelist)
+            Read(unit=20, nml=io_controls_namelist)
+            Read(unit=20, nml=output_namelist)
+            Read(unit=20, nml=boundary_conditions_namelist)
+            Read(unit=20, nml=initial_conditions_namelist)
+            Read(unit=20, nml=test_namelist)
+            Read(unit=20, nml=reference_namelist)
+            Read(unit=20, nml=Transport_Namelist)
+
+            Close(20)
+
+        Else
+            ! Rank 0 reads the input file & broadcasts its contents to all other ranks.
+            If (my_rank .eq. 0) Then
+                Write(6,*)' '
+                Write(6,*)'Parallel input...', len(input_lines)
+                Write(6,*)' '
+            Endif
+
+            Call Read_Input_File(input_file, mx_line_len, mx_lines*mx_line_len)
+
+          
+            Read(input_lines, nml=problemsize_namelist)
+            Write(6,*)'Check1: ', N_R, N_Theta
+            Read(input_lines, nml=numerical_controls_namelist)
+            Read(input_lines, nml=physical_controls_namelist)
+            Read(input_lines, nml=temporal_controls_namelist)
+            Read(input_lines, nml=io_controls_namelist)
+            Read(input_lines, nml=output_namelist)
+            Read(input_lines, nml=boundary_conditions_namelist)
+            Read(input_lines, nml=initial_conditions_namelist)
+            Read(input_lines, nml=test_namelist)
+            Read(input_lines, nml=reference_namelist)
+            Read(input_lines, nml=Transport_Namelist)
 
         Endif
-
-        ! First read the main input file
-        Open(unit=20, file=input_file, status="old", position="rewind")
-        Read(unit=20, nml=problemsize_namelist)
-        Read(unit=20, nml=numerical_controls_namelist)
-        Read(unit=20, nml=physical_controls_namelist)
-        Read(unit=20, nml=temporal_controls_namelist)
-        Read(unit=20, nml=io_controls_namelist)
-        Read(unit=20, nml=output_namelist)
-        Read(unit=20, nml=boundary_conditions_namelist)
-        Read(unit=20, nml=initial_conditions_namelist)
-        Read(unit=20, nml=test_namelist)
-        Read(unit=20, nml=reference_namelist)
-        Read(unit=20, nml=Transport_Namelist)
-        Close(20)
 
         ! Check the command line to see if any arguments were passed explicitly
         Call CheckArgs()
 
+       
+
     End Subroutine Main_Input
+
+
+    !//////////////////////////////////////
+    ! Opens the file infile and stores it, character by character
+    ! into file_lines.  Carriage returns are removed.
+    Subroutine Read_Input_File(infile, llen, flen)
+        Implicit None
+        Integer             , Intent(In)    :: flen        ! Must be <= number of characters in file_lines
+        Integer             , Intent(In)    :: llen        ! maximum number of characters per line in infile
+        Character(*)        , Intent(In)    :: infile      ! The namelist input file to read
+        !Character(len=flen) , Intent(InOut) :: file_lines  ! infile is read into file_lines (newlines removed)
+        Integer ::  j, ij, funit, istat
+        Character(len=llen) :: one_line
+
+
+        Do j = 1, len(input_lines)
+            input_lines(j:j) = ' '
+        Enddo
+
+        Do j = 1, len(one_line)
+            one_line(j:j) = ' '
+        Enddo
+
+        Open(newunit=funit, file=infile, status="old", position="rewind")
+
+        ij = 1
+        istat = 0
+
+        Do While (istat .eq. 0)
+            Read(unit=funit,fmt='(a)',iostat=istat)one_line
+            If (istat .eq. 0) then
+                Do j = 1, len(one_line)
+                    if (one_line(j:j) .eq. '!') Write(6,*)'UGH!'
+                    input_lines(ij:ij) = one_line(j:j)
+                    ij = ij+1
+                Enddo
+            Endif
+        Enddo
+        Close(funit)
+
+    End Subroutine Read_Input_File
+
+
 
     Subroutine Check_Run_Mode()
         ! Checks the command line for multiple run flag
