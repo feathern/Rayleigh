@@ -277,7 +277,7 @@ Contains
         ref%pressure_dwdr_term(:) = -1.0d0*ref%density*pscaling
         ref%Coriolis_Coeff        =  2.0d0/Ekman_Number
 
-        If (devel_physics) Then
+        If (pycnoclinic) Then
             Allocate(paf_v2(1:N_R), paf_gv2(1:N_R))
             Allocate(paf_p2(1:N_R), paf_gp2(1:N_R))
             Allocate(sink(1:N_R), cosk(1:N_R) )

@@ -440,6 +440,15 @@ Contains
         Endif
 
 
+        If (pycnoclinic) Then
+            !$OMP PARALLEL DO PRIVATE(t,r,k)
+            DO_IDX
+                RHSP(IDX,wvar) = RHSP(IDX,wvar)  &
+                    & +paf_v2(r)*RHSP(IDX,dtdr)*R_Squared(r)
+            END_DO
+            !$OMP END PARALLEL DO
+        Endif
+
         ! Multiply advection/coriolis pieces by rho
         !$OMP PARALLEL DO PRIVATE(t,r,k)
         DO_IDX
@@ -703,6 +712,15 @@ Contains
 
         Endif
 
+        If (pycnoclinic) Then
+            !$OMP PARALLEL DO PRIVATE(t,r,k)
+            DO_IDX
+                RHSP(IDX,pvar) = RHSP(IDX,pvar)  &
+                    & -paf_v2(r)*RHSP(IDX,dtdt)*one_over_r(r)
+            END_DO
+            !$OMP END PARALLEL DO
+        Endif
+
         ! Multiply advection/coriolis pieces by rho
         !$OMP PARALLEL DO PRIVATE(t,r,k)
         DO_IDX
@@ -783,6 +801,16 @@ Contains
                 RHSP(IDX,zvar) = RHSP(IDX,zvar)                        &
                      + ref%Coriolis_Coeff*costheta(t)*FIELDSP(IDX,vtheta) &
                      + ref%Coriolis_Coeff*sintheta(t)*FIELDSP(IDX,vr)
+            END_DO
+            !$OMP END PARALLEL DO
+        Endif
+
+        If (pycnoclinic) Then
+            !$OMP PARALLEL DO PRIVATE(t,r,k)
+            DO_IDX
+                RHSP(IDX,zvar) = RHSP(IDX,zvar)  &
+                    & -paf_v2(r)*RHSP(IDX,dtdp)*one_over_r(r) &
+                    & *csctheta(t)
             END_DO
             !$OMP END PARALLEL DO
         Endif
