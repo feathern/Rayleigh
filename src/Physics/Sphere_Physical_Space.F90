@@ -444,7 +444,7 @@ Contains
             !$OMP PARALLEL DO PRIVATE(t,r,k)
             DO_IDX
                 RHSP(IDX,wvar) = RHSP(IDX,wvar)  &
-                    & +paf_v2(r)*RHSP(IDX,dtdr)*R_Squared(r)
+                    & +paf_v2(r)*FIELDSP(IDX,dtdr)*R_Squared(r)
             END_DO
             !$OMP END PARALLEL DO
         Endif
@@ -716,7 +716,7 @@ Contains
             !$OMP PARALLEL DO PRIVATE(t,r,k)
             DO_IDX
                 RHSP(IDX,pvar) = RHSP(IDX,pvar)  &
-                    & -paf_v2(r)*RHSP(IDX,dtdt)*one_over_r(r)
+                    & -paf_v2(r)*FIELDSP(IDX,dtdt)*one_over_r(r)
             END_DO
             !$OMP END PARALLEL DO
         Endif
@@ -809,7 +809,7 @@ Contains
             !$OMP PARALLEL DO PRIVATE(t,r,k)
             DO_IDX
                 RHSP(IDX,zvar) = RHSP(IDX,zvar)  &
-                    & -paf_v2(r)*RHSP(IDX,dtdp)*one_over_r(r) &
+                    & -paf_v2(r)*FIELDSP(IDX,dtdp)*one_over_r(r) &
                     & *csctheta(t)
             END_DO
             !$OMP END PARALLEL DO
