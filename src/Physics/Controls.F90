@@ -62,6 +62,7 @@ Module Controls
                                                 ! Generally only do this if reference state is nonadiabatic
     Logical :: Centrifugal_Force = .false.
     Logical :: pycnoclinic = .false.
+    Logical :: paf_dr = .true.
 
     ! --- This flag determines if the code is run in benchmark mode
     !     0 (default) is no benchmarking.  1-5 are various accuracy benchmarks (see documentation)
@@ -73,7 +74,8 @@ Module Controls
     Namelist /Physical_Controls_Namelist/ magnetism, nonlinear, rotation, lorentz_forces, &
                 & viscous_heating, ohmic_heating, advect_reference_state, benchmark_mode, &
                 & benchmark_integration_interval, benchmark_report_interval, stable_flag, &
-                & momentum_advection, pycnoclinic, inertia, Centrifugal_Force
+                & momentum_advection, pycnoclinic, inertia, Centrifugal_Force, &
+                & paf_dr
 
     !///////////////////////////////////////////////////////////////////////////
     !   Temporal Controls

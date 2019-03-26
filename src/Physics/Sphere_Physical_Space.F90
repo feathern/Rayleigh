@@ -440,7 +440,7 @@ Contains
         Endif
 
 
-        If (pycnoclinic) Then
+        If (pycnoclinic .and. paf_dr) Then
             !$OMP PARALLEL DO PRIVATE(t,r,k)
             DO_IDX
                 RHSP(IDX,wvar) = RHSP(IDX,wvar)  &
