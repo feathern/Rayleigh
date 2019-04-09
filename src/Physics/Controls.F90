@@ -61,8 +61,11 @@ Module Controls
     Logical :: advect_reference_state = .false.  ! Set to true to advect the reference state
                                                 ! Generally only do this if reference state is nonadiabatic
     Logical :: Centrifugal_Force = .false.
-    Logical :: pycnoclinic = .false.
+    Logical :: Coriolis_Force = .true.
+    Logical :: Pycnoclinic = .false.
     Logical :: paf_dr = .true.
+    Logical :: paf_dh = .true.
+    Logical :: Pycnoclinic_paf = .true.
 
     ! --- This flag determines if the code is run in benchmark mode
     !     0 (default) is no benchmarking.  1-5 are various accuracy benchmarks (see documentation)
@@ -75,7 +78,7 @@ Module Controls
                 & viscous_heating, ohmic_heating, advect_reference_state, benchmark_mode, &
                 & benchmark_integration_interval, benchmark_report_interval, stable_flag, &
                 & momentum_advection, pycnoclinic, inertia, Centrifugal_Force, &
-                & paf_dr
+                & paf_dr, pycnoclinic_paf, paf_dh
 
     !///////////////////////////////////////////////////////////////////////////
     !   Temporal Controls
