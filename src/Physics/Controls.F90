@@ -78,7 +78,7 @@ Module Controls
                 & viscous_heating, ohmic_heating, advect_reference_state, benchmark_mode, &
                 & benchmark_integration_interval, benchmark_report_interval, stable_flag, &
                 & momentum_advection, pycnoclinic, inertia, Centrifugal_Force, &
-                & paf_dr, pycnoclinic_paf, paf_dh
+                & paf_dr, pycnoclinic_paf, paf_dh, coriolis_force
 
     !///////////////////////////////////////////////////////////////////////////
     !   Temporal Controls
