@@ -250,7 +250,7 @@ Contains
             ref%Buoyancy_Coeff(i) = amp*(radius(i)/radius(1))**gravity_power
         Enddo
         If (Centrifugal_Force) Then
-            ref%Centrifugal_Coeff = Froude_Number*Rayleigh_Number/Prandtl_Number
+            ref%Centrifugal_Coeff =  1.0d0/(Ekman_Number*Ekman_Number) !Froude_Number*Rayleigh_Number/Prandtl_Number
         Endif
 
         pressure_specific_heat = 1.0d0
