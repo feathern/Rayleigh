@@ -54,16 +54,20 @@ Module Initial_Conditions
     Logical :: rescale_pressure = .false.
     Logical :: rescale_tvar = .false.
     Logical :: rescale_entropy = .false.
+    Logical :: add_thermal_noise = .false.
+    Logical :: replace_tell0 = .false.
     Real*8  :: velocity_scale = 1.0d0
     Real*8  :: bfield_scale = 1.0d0
     Real*8  :: tvar_scale = 1.0d0
     Real*8  :: pressure_scale = 1.0d0
     Real*8  :: mdelta = 0.0d0  ! mantle convection benchmark delta
+    Character*120 :: thermal_ell0_file ='nothing'
 
     Namelist /Initial_Conditions_Namelist/ init_type, temp_amp, temp_w, restart_iter, &
             & magnetic_init_type,alt_check, mag_amp, conductive_profile, rescale_velocity, &
             & rescale_bfield, velocity_scale, bfield_scale, rescale_tvar, &
-            & rescale_pressure, tvar_scale, pressure_scale, mdelta
+            & rescale_pressure, tvar_scale, pressure_scale, mdelta, add_thermal_noise, &
+            & thermal_ell0_file, replace_tell0
 Contains
 
     Subroutine Initialize_Fields()
@@ -194,6 +198,7 @@ Contains
         Integer :: this_ell, lm
         Character*14 :: scstr
         Character*8 ::  scfmt ='(ES10.4)'
+        Real*8, Allocatable :: new_profile(:)
         !rpars(1) = 1 if hydro variables are to be read (0 otherwise)
         !rpars(2) = 1 if magnetic variables are to be read (0 otherwise)
         rpars(1:2) = 0
@@ -286,6 +291,28 @@ Contains
                 Write(scstr,scfmt)tvar_scale
                 Call stdout%print(" Rescaling thermal field (ell > 0) by: "//scstr)
             Endif
+        Endif
+
+        If (add_thermal_noise) Then
+            euler_step = .true.
+            Call Add_Random_Noise(tempfield%p1a,tvar, temp_amp)
+            Write(6,*)'Adding noise'
+
+        Endif
+
+        If (replace_tell0) Then
+            ! We do not rescale the ell = 0 mode
+            euler_step = .true.
+            Allocate(new_profile(1:N_R))
+            new_profile(:)=0.0d0
+            Call Load_Radial_Profile(thermal_ell0_file,new_profile)
+            Do lm = 1, my_num_lm
+                this_ell = l_lm_values(lm)
+                If (this_ell .eq. 0) Then
+                    tempfield%p1a(:,1,lm,tvar) = new_profile(:)*sqrt(4.0d0*pi)
+                Endif
+            Enddo
+            DeAllocate(new_profile)
         Endif
 
 
@@ -513,6 +540,38 @@ Contains
         Call sbuffer%deconstruct('p1b')
 
     End Subroutine Random_Thermal_Init
+
+
+    !//////////////////////////////////////////////////////////////////////////////////
+    !//  Add random thermal noise onto an existing checkpoint
+    !//
+    Subroutine Add_Random_Noise(p1a,varind,amp)
+        ! Generates random initial thermal perturbations
+        Implicit None
+        Integer, Intent(In) :: varind
+        Real*8, Intent(InOut) :: p1a(:,:,:,:)
+        Real*8, Intent(In) :: amp
+        Integer :: fcount(3,2)
+        type(SphericalBuffer) :: sbuffer
+        fcount(:,:) = 1
+
+        !amp = temp_amp
+
+        ! Construct a buffer to hold the random noise
+        Call sbuffer%init(field_count = fcount, config = 'p1b')
+        Call sbuffer%construct('p1b')
+
+        ! Randomize the field
+        Call Generate_Random_Field(amp, 1, sbuffer)
+
+        !Add the noise
+        p1a(:,:,:,varind) = p1a(:,:,:,varind)+sbuffer%p1b(:,:,:,1)
+
+        Call sbuffer%deconstruct('p1b')
+
+    End Subroutine Add_Random_Noise
+
+
 
     !//////////////////////////////////////////////////////////////////////////////////
     !  Diffusion Init (for linear solve development)
