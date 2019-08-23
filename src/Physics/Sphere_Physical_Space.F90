@@ -436,7 +436,7 @@ Contains
                 DO_IDX
                     RHSP(IDX,wvar) = RHSP(IDX,wvar) - &
                         ref%Centrifugal_Coeff*sintheta(t)* &
-                        radius(r)*R_squared(r)*FIELDSP(IDX,tvar)
+                        radius(r)*R_squared(r)*FIELDSP(IDX,tvar)*sintheta(t)
                 END_DO
                 !$OMP END PARALLEL DO
             Endif
@@ -710,7 +710,7 @@ Contains
                 DO_IDX
                     RHSP(IDX,pvar) = RHSP(IDX,pvar) + &
                         ref%Centrifugal_Coeff*costheta(t)* &
-                        radius(r)*FIELDSP(IDX,tvar)
+                        radius(r)*FIELDSP(IDX,tvar)*sintheta(t)
                 END_DO
                 !$OMP END PARALLEL DO
             Endif
