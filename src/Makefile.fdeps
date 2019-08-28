@@ -2,11 +2,12 @@ All_to_All.o : All_to_All.F90 Ra_MPI_Base.o
 Benchmarking.o : Benchmarking.F90 Initial_Conditions.o BoundaryConditions.o Math_Constants.o PDE_Coefficients.o Legendre_Polynomials.o Fields.o Spherical_IO.o Controls.o ProblemSize.o 
 BoundaryConditions.o : BoundaryConditions.F90 PDE_Coefficients.o Generic_Input.o Load_Balance.o Fields.o ProblemSize.o Math_Constants.o 
 BufferedOutput.o : BufferedOutput.F90 
-Chebyshev_Polynomials.o : Chebyshev_Polynomials.F90 Structures.o 
+Chebyshev_Polynomials.o : Chebyshev_Polynomials.F90 Cosine_Transform.o Structures.o 
 Chebyshev_Polynomials_Alt.o : Chebyshev_Polynomials_Alt.F90 
 Checkpointing.o : Checkpointing.F90 BufferedOutput.o Chebyshev_Polynomials_Alt.o Ra_MPI_Base.o Controls.o ISendReceive.o SendReceive.o Linear_Solve.o Spherical_Buffer.o Parallel_Framework.o ProblemSize.o Timers.o 
 ClockInfo.o : ClockInfo.F90 Controls.o 
 Controls.o : Controls.F90 BufferedOutput.o 
+Cosine_Transform.o : Cosine_Transform.F90 
 Diagnostics_ADotGradB.o : Diagnostics_ADotGradB.F90 indices.F Diagnostics_Base.o 
 Diagnostics_Angular_Momentum.o : Diagnostics_Angular_Momentum.F90 indices.F Diagnostics_Base.o 
 Diagnostics_Axial_Field.o : Diagnostics_Axial_Field.F90 indices.F Diagnostics_Base.o 
@@ -58,7 +59,6 @@ Parallel_Framework.o : Parallel_Framework.F90 BufferedOutput.o Structures.o Load
 ProblemSize.o : ProblemSize.F90 Timers.o BufferedOutput.o Math_Constants.o Chebyshev_Polynomials.o Controls.o Spectral_Derivatives.o Legendre_Polynomials.o Parallel_Framework.o 
 Ra_MPI_Base.o : Ra_MPI_Base.F90 
 Run_Param_Header.dbg.o : Run_Param_Header.dbg.F 
-Run_Param_Header.opt.o : Run_Param_Header.opt.F 
 Run_Parameters.o : Run_Parameters.F90 PDE_Coefficients.o TestSuite.o Initial_Conditions.o BoundaryConditions.o Spherical_IO.o ProblemSize.o Parallel_Framework.o Controls.o 
 SendReceive.o : SendReceive.F90 Ra_MPI_Base.o 
 Spectral_Derivatives.o : Spectral_Derivatives.F90 Structures.o 

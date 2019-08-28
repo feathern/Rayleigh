@@ -24,3 +24,6 @@ Linear_Solve_QI.F90
              3. Implicit Solve has similar flags and call to QI_Solve, which wraps to QI_Pack solver routines.
 	     4. LU_Decompose has similar flags and call to QI_Decompose, which wraps to QI_Pack LU decomposition routines.	
 	     5. Add_implicit_term_QI 
+
+To Configure:
+./configure --with-qipack=/home/feathern/devel/qi_pack -mkl --FC=mpif90 --with-fftw=/custom/software/fftw/3.3.8
