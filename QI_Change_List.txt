@@ -1,0 +1,26 @@
+Rayleigh Subroutine call flowchart necessary for QI implementation:
+
+Implementation noted with initials BM, KA, or NF.
+
+From High to Low:
+
+Controls.F90 --
+	     1. Create qi_flag (Done), default (False).
+	     2. Add to numerical control namelist (Done)   
+	     3. Add to restore numerical defauts subroutine (Done)
+
+Main.F90 --
+Call Main_Input() --
+             1. Get qi_flag state (Automatic)
+
+Sphere_Spectral_Space.F90 --
+Call Post_Solve() --
+             1. If necessary, reset linear equations (relies on Linear_Solve_QI.F90)
+	     
+Linear_Solve_QI.F90
+             1. Added Use_QISolve() routine.
+             2. Added qi_flag and k.eq.zeq, and related allocation conditionals to
+	     	Allocate_LHS, Deallocate_LHS, Reset_Equation_Coefficients
+             3. Implicit Solve has similar flags and call to QI_Solve, which wraps to QI_Pack solver routines.
+	     4. LU_Decompose has similar flags and call to QI_Decompose, which wraps to QI_Pack LU decomposition routines.	
+	     5. Add_implicit_term_QI 
