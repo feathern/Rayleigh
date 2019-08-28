@@ -27,3 +27,7 @@ Linear_Solve_QI.F90
 
 To Configure:
 ./configure --with-qipack=/home/feathern/devel/qi_pack -mkl --FC=mpif90 --with-fftw=/custom/software/fftw/3.3.8
+
+Checked:
+	Derivatives using the new scheme have been checked by running the C2001 case0 benchmark.    Answers were identical to those
+        achieved with original version of the code.
