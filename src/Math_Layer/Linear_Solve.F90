@@ -21,6 +21,7 @@
 Module Linear_Solve
     Use Finite_Difference
     Use Chebyshev_Polynomials, Only : Cheby_Grid
+    Use qipack_master_scalareq_d , Only : dcsr_matrix
     !==========================================================================
     ! Generalized Implicit Time-stepping
     ! Currently assumes that implicit time stepping can be done with 1 dimension (only)
@@ -82,12 +83,29 @@ Module Linear_Solve
         Real*8  :: dparm(64), ddum
         logical :: sparse_initialized = .false.
 
+
+        !/////////////////////////////////////////////////////////////////////////
+        ! QI Pack Variables
+        !Integer, Allocatable  :: Equ_order(:,:) ! really needs to be an array of length nlinks x nsub_modes
+        Real*8, Allocatable :: rhs_cheby(:,:,:)   ! The Chebyshev transform of rhs(:,:,:)
+        real*8, Pointer, dimension(:,:,:) :: rhs_pointer_cheby    ! Analagous to rhs_pointer
+
+        Real*8, Allocatable :: rhs_icheby(:,:,:)   ! Contracted
+        real*8, Pointer, dimension(:,:,:) :: rhs_pointer_icheby    ! Analagous to rhs_pointer
+        !Type(ddia_and_lu) :: LDIA    ! %dia is the sparse matrix in diagonal format: %dia%dat(:,:) are the coefs, %dia%nrow, ncol, nl, nu
+         !                            ! %lu(:,:) is the LU factorization
+          !                           ! %piv(:) are the pivots
+           !                          !< FIXME is this matrix really used?
+        Type(dcsr_matrix) :: QI_MMLDT
+
         Contains
         Procedure :: LU_Solve_Sparse
         Procedure :: LU_Decompose_Sparse
 
     End Type Equation
 
+    !> QI PACK STUFF
+    integer :: trun_degree !< FIXME
 
 
 
@@ -398,13 +416,14 @@ Module Linear_Solve
         Enddo
     End Subroutine DeAllocate_RHS
 
-    Subroutine Apply_Boundary_Mask(bcmask)
+    Subroutine Apply_Boundary_Mask(bcmask,k)
         Implicit None
-        Integer :: j, k, eqind
+        Integer :: j, eqind
+        Integer, Intent(In) :: k
         Real*8, Intent(In) :: bcmask(:,:,:,:)
 
 
-        Do k = 1, n_equations
+        !Do k = 1, n_equations
 
             If (equation_set(1,k)%primary) Then
                 Do j = 1, equation_set(1,k)%nlinks
@@ -414,7 +433,7 @@ Module Linear_Solve
                 Enddo
             Endif
 
-        Enddo
+        !Enddo
     End Subroutine Apply_Boundary_Mask
     
 

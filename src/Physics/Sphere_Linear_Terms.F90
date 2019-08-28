@@ -29,6 +29,8 @@ Module Sphere_Linear_Terms
     Use ClockInfo
     Use PDE_Coefficients
     Use Math_Constants
+    Use Cosine_Transform
+    Use qipack_master_scalareq_d , Only : assemble_stiffness_mat_varcoefs, DJcheb, ChebmulCheb, ChebIM
     Implicit None
     Real*8, Allocatable :: Lconservation_weights(:)
 
@@ -168,6 +170,11 @@ Contains
         Real*8, Allocatable :: H_Laplacian(:), amp(:)
         Integer :: l, lp
         Real*8 :: diff_factor,ell_term
+        Real*8, Allocatable :: arr_var_coefs(:,:), all_amp(:)
+        Real*8, Allocatable :: all_amp_fourier(:)
+        Integer :: iorder
+        Integer :: order_max
+
         !rmin_norm
         diff_factor = 1.0d0 ! hyperdiffusion factor (if desired, 1.0d0 is equivalent to no hyperdiffusion)
         Allocate(amp(1:N_R))
@@ -321,6 +328,105 @@ Contains
                 !=====================================================
                 !    Z Equation
 
+          !Kyle and Ben, adding construction of QI_MMDTL
+          If (qi_flag) Then
+             order_max = 2 !< FIXME get this from the equation structure
+             Allocate(arr_var_coefs(N_R,order_max+1))  ! N_R is shape(amp)
+             !Ben will figure out how to do this.
+             !=====================================================
+             !=====================================================
+             ! ORDER ZERO
+             iorder = 0
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! Start by summing all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             Allocate(all_amp(N_R))
+             Allocate(all_amp_fourier(N_R))
+             all_amp=0.d0
+             If (inertia) Then
+                ! (from u_{t+1} in CN method -- no dt factor)
+                amp = 1.0d0
+                all_amp = all_amp + amp
+             Endif
+             !amp = H_Laplacian
+             amp = H_Laplacian*nu*diff_factor
+             all_amp = all_amp + amp
+             ! Variation of rho and nu
+             amp = Z_Diffusion_Coefs_0*diff_factor
+             all_amp = all_amp + amp
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! DCT the sum of all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             Call a_1d_dct_of(all_amp, all_amp_fourier)
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! store the DCT in a rank 2 array.
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             arr_var_coefs(:,iorder) = all_amp_fourier
+             !=====================================================
+             !=====================================================
+             ! ORDER ONE
+             iorder = 1
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! Start by summing all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             amp = Z_Diffusion_Coefs_1*diff_factor
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! DCT the sum of all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             Call a_1d_dct_of(all_amp, all_amp_fourier)
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! store the DCT in a rank 2 array.
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             arr_var_coefs(:,iorder) = all_amp_fourier
+             !=====================================================
+             !=====================================================
+             ! ORDER TWO
+             iorder = 2
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! Start by summing all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             amp = nu
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! DCT the sum of all the non-constant coefficients
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             Call a_1d_dct_of(all_amp, all_amp_fourier)
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ! store the DCT in a rank 2 array.
+             !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             arr_var_coefs(:,iorder) = all_amp_fourier
+             !=====================================================
+             trun_degree = N_R / 10 !< FIXME arbitrary value
+             Call assemble_stiffness_mat_varcoefs (equation_set(lp,zeq)%QI_MMLDT, trun_degree, order_max, arr_var_coefs, &
+                                                   ChebIM, DJcheb, ChebMulCheb, N_R)
+
+             !> At this point, we have defined cheb-cheb coupling matrices
+             !! To enforce boundary conditions, we need to multiply on the 
+             !! right by the corresponding stencil matrix.
+             !> TODO 1. import chebyshev_galerkin.f90 and define additionnal BCs
+             !!
+             !> Next, the matrices should be cast in a type(ddia_and_lu) variable
+             !! which can be LU-factorized using sparse_lapack_wrapper.f90.
+             !!
+             !> The linear solves can be bundled in needed.
+
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+             ! BENFLAG : RESTART HERE // THIS IS WHERE WE STOPPED WITH KYLE
+          Else
+
+
+
                 If (inertia) Then
                     ! (from u_{t+1} in CN method -- no dt factor)
                     amp = 1.0d0
@@ -339,6 +445,8 @@ Contains
                 Call add_implicit_term(zeq,zvar, 0, amp,lp)
                 amp = Z_Diffusion_Coefs_1*diff_factor
                 Call add_implicit_term(zeq,zvar, 1, amp,lp)
+            Endif
+
                 If (magnetism) Then
                     !=========================================
                     !  Btor Equation
@@ -667,7 +775,16 @@ Contains
         Integer :: uind, lind
         Integer :: real_ind, imag_ind
 
-        Call Apply_Boundary_Mask(bc_values)
+        Call Apply_Boundary_Mask(bc_values,weq)
+        ! Ben & Kyle QI change to avoid modifying the RHS.
+        If (.not.qi_flag) Then
+            Call Apply_Boundary_Mask(bc_values,zeq)
+        EndIf
+        If (magnetism) Then
+            Call Apply_Boundary_Mask(bc_values,aeq)
+            Call Apply_Boundary_Mask(bc_values,ceq)
+        Endif
+          
         Call Domain_Continuity()
 
     End Subroutine Enforce_Boundary_Conditions

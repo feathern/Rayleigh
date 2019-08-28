@@ -5,6 +5,42 @@ Module Cosine_Transform
 
 Contains
 
+
+
+  Subroutine a_1d_dct_of(x,y) !< FIXME: change the ridiculous name
+                              !! but get rid of the goto statement first
+    Real*8, Intent(InOut) :: x(:)
+    Real*8, Intent(InOut) :: y(:)
+    Integer*8 :: p_r2r_f ! plan for the forward transform
+    Type(C_Ptr)  :: fresh_plan ! plan for the forward transform
+    Type(C_Ptr) :: pdum, qdum
+    Real(8), Pointer :: my_in (:)
+    Real(8), Pointer :: my_out(:)
+    Integer :: n1! the four dimensions of array x
+    n1 = size(x,1)
+
+    pdum = fftw_alloc_real(int(n1, kind=C_SIZE_T))
+    Call C_F_Pointer(pdum, my_in, [n1])
+    qdum = fftw_alloc_real(int(n1, kind=C_SIZE_T))
+    Call C_F_Pointer(qdum, my_out,[n1])
+
+    my_in  = x
+
+    fresh_plan = fftw_plan_many_r2r(1, [n1], 1, &
+         my_in, [n1], 1, n1, &
+         my_out, [n1], 1, n1, &
+         [FFTW_REDFT10], FFTW_estimate) !< FIXME: call the regular planner, not the general one
+
+    Call fftw_execute_r2r (fresh_plan, my_in, my_out)
+
+    y = my_out/n1   ! can optimize this out later
+    Call fftw_free(pdum)
+    Call fftw_free(qdum)
+   
+    
+  End Subroutine 
+
+
   Subroutine r2r_4D_fftw_forward(x,y, p_r2r_f)
     Real*8, Intent(InOut) :: x(:,:,:,:)
     Real*8, Intent(InOut) :: y(:,:,:,:)
