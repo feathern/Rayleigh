@@ -1,26 +1,9 @@
-!
-!  Copyright (C) 2018 by the authors of the RAYLEIGH code.
-!
-!  This file is part of RAYLEIGH.
-!
-!  RAYLEIGH is free software; you can redistribute it and/or modify
-!  it under the terms of the GNU General Public License as published by
-!  the Free Software Foundation; either version 3, or (at your option)
-!  any later version.
-!
-!  RAYLEIGH is distributed in the hope that it will be useful,
-!  but WITHOUT ANY WARRANTY; without even the implied warranty of
-!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!  GNU General Public License for more details.
-!
-!  You should have received a copy of the GNU General Public License
-!  along with RAYLEIGH; see the file LICENSE.  If not see
-!  <http://www.gnu.org/licenses/>.
-!
-
 Module Chebyshev_Polynomials
     Use Structures
-    ! Module for computing Chebyshev Polynomial Arrays and the associated Derivative Arrays
+    Use qipack_master_scalareq_d , Only : Initialize_master_cheby_QIpack, wrap_LUsolve_band_d, dchebi
+    Use, intrinsic :: iso_c_binding
+    Use Cosine_Transform, Only: r2r_4D_fftw_forward, r2r_4D_fftw_inverse
+   ! Module for computing Chebyshev Polynomial Arrays and the associated Derivative Arrays
     Implicit None
     Integer :: cp_nthreads
     Real*8, private ::    Pi  = 3.1415926535897932384626433832795028841972d+0
@@ -55,14 +38,35 @@ Module Chebyshev_Polynomials
             Procedure :: dealias_buffer => dealias_buffer4d
             Procedure :: to_spectral => to_spectral4d
             Procedure :: from_spectral => from_spectral4d
-            Procedure :: d_by_dr_cp => Cheby_Deriv_Buffer_4D
+            Procedure :: d_by_dr_cp => QI_Deriv_4D 
+            Procedure :: from_spectral_cos
+            Procedure :: to_spectral_cos
+            !Procedure :: d_by_dr_cp => Cheby_Deriv_Buffer_4D
     End Type Cheby_Grid
 
     Type(Cheby_Grid), Public :: main_grid  ! Publically accessible grid object (alleviates need for pointers)
 
 Contains
 
-    Subroutine Initialize_Cheby_Grid(self,grid,integration_weights,ndomains,npoly, &
+    Subroutine to_spectral_cos(self,f_in, f_out)
+        Implicit None
+        Class(Cheby_Grid) :: self
+        Real*8, Intent(InOut) :: f_out(:,:,:,:), f_in(:,:,:,:)
+
+
+        Call r2r_4D_fftw_forward(f_in, f_out)
+    End Subroutine to_spectral_cos
+
+    Subroutine from_spectral_cos(self,f_in, f_out)
+        Implicit None
+        Class(Cheby_Grid) :: self
+        Real*8, Intent(InOut) :: f_out(:,:,:,:), f_in(:,:,:,:)
+
+
+        Call r2r_4D_fftw_inverse(f_in, f_out)
+    End Subroutine from_spectral_cos
+
+    Subroutine Initialize_Cheby_Grid(self,grid,integration_weights,ndomains,npoly, & 
                 & bounds,dmax,nthread,dealias_by, verbose)
         Implicit None
         Class(Cheby_Grid) :: self
@@ -79,6 +83,17 @@ Contains
         Integer :: ind, ind2, n_max, dmx, gindex, db,scheck
         Logical :: custom_dealiasing = .false.
         Logical :: report
+
+        !For QIPack
+        Integer :: nf1, pow_max, order_max, ntrunc_max
+        Real*8 :: layer_center, layer_gap, new_scale
+
+
+
+
+
+
+
         report = .false.
 
         If (present(verbose)) Then
@@ -92,11 +107,11 @@ Contains
         Endif
         If (present(dealias_by)) Then
             scheck = size(dealias_by)
-            If ( (scheck .ge. ndomains) .and. report ) Then
+            If ( (scheck .ge. ndomains) .and. report ) Then 
                 Write(6,*)'dealias_by: ', dealias_by(1:ndomains)
             Endif
-        Endif
-
+        Endif        
+   
         !Note that bounds and npoly are assumed to be provided in ascending order
         !We reverse them so that the subdomains agree with a globally reversed grid
         dmx = 3
@@ -104,7 +119,7 @@ Contains
             If (dmax .ge. 1) dmx = dmax
         Endif
 
-
+        
         If (present(dealias_by)) Then
             scheck = size(dealias_by)
             if (scheck .ge. ndomains) custom_dealiasing = .true.
@@ -129,7 +144,7 @@ Contains
             self%rda(i) = db
             If (custom_dealiasing) Then
                 db = dealias_by(domain_count+1-i)
-
+                
                 If ((db .ge. 1) .and. (db .lt. n) ) Then
                     self%rda(i) = n-db+1
                 Endif
@@ -176,7 +191,7 @@ Contains
             int_scale = (3*Pi* scaling)/( (gmax**3 - gmin**3) * n_max )
 
             scaling = 1.0d0/scaling
-
+            
 
             Do i = 1, dmx
                 self%dcheby(n)%data(:,:,i) = &
@@ -185,7 +200,7 @@ Contains
 
             Do i=1,N_max
                 gindex = ind+i-1
-                 xx = self%x(i,n)
+                 xx = self%x(i,n) 
                 integration_weights(gindex) = &
                     & int_scale*grid(gindex)**2  * sqrt(1.0d0-xx*xx)
                 self%deriv_scaling(gindex) = scaling
@@ -204,8 +219,20 @@ Contains
             If (nthread .gt. 1) cp_nthreads = nthread
         Endif
 
-    End Subroutine Initialize_Cheby_Grid
+        !Initialize QIPack
+        nf1 = (2*size(grid))/3
+        
+        
+        layer_gap = (maxval(grid)-minval(grid))*2.0d0/scaling
+        layer_center =  minval(grid)+layer_gap*0.5d0
+        pow_max = 0    ! not really used here (for R^2 factors)
+        order_max = 3  ! highest order derivative needd
+        ntrunc_max = 2 ! need to set this later
+        !Write(6,*)'Mind the gap: ', layer_gap, scaling/2.0d0, 2.0d0/scaling, new_scale, 1.0d0/new_scale
 
+        Call Initialize_master_cheby_QIpack(nf1, layer_center, layer_gap, &
+                                            pow_max, order_max, Ntrunc_max, report)
+    End Subroutine Initialize_Cheby_Grid
 
     Subroutine Gen_Colocation_Points(self)
         Implicit None
@@ -217,8 +244,8 @@ Contains
 
         Do n = 1,self%domain_count
             n_max = self%npoly(n)
-
-            If (use_extrema) Then  !Use the extrema of T_{N_max-1}
+        
+            If (use_extrema) Then  !Use the extrema of T_{N_max-1}  
 
                 dtheta = pi/(N_max-1)
                 theta0 = 0.0d0
@@ -318,7 +345,7 @@ Contains
             Do k = N_max-2, 1, -1
                 alpha(k,k+1) = 2.0d0*k
                 alpha(k,:) = alpha(k,:)+alpha(k+2,:)
-            Enddo
+            Enddo     
 
             Allocate(self%dcheby(m)%data(1:N_max,1:N_max,0:dmax))
             self%dcheby(m)%data(:,:,:) = 0.0d0
@@ -384,7 +411,7 @@ Contains
         Integer :: i, j, k, kk, n2, n3, n4, dims(4),nsub,nglobal, hoff, hh
         Integer :: istart, iend, n_even, n_odd, n_max, n_x
 
-
+        
         beta = 0.0d0
         dims = shape(f_in)
         nglobal = dims(1)
@@ -483,7 +510,7 @@ Contains
             Do k = 1, n3
             Do j = 1, n2
             Do i = 1, n_even
-                c_temp(i,j,k,kk) = c_in(hoff+2*i-1,j,k,kk)
+                c_temp(i,j,k,kk) = c_in(hoff+2*i-1,j,k,kk) 
             Enddo
             Enddo
             Enddo
@@ -518,7 +545,7 @@ Contains
             Do k = 1, n3
             Do j = 1, n2
             Do i = 1, n_odd
-                c_temp(i,j,k,kk) = c_in(hoff+2*i,j,k,kk)
+                c_temp(i,j,k,kk) = c_in(hoff+2*i,j,k,kk) 
             Enddo
             Enddo
             Enddo
@@ -560,7 +587,7 @@ Contains
     End Subroutine From_Spectral4D
 
     Subroutine Cheby_Deriv_Buffer_4D(self,ind,dind,buffer,dorder)
-#ifdef useomp
+#ifdef useomp 
         Use Omp_lib
 #endif
         Implicit None
@@ -574,7 +601,7 @@ Contains
         dims = shape(buffer)
         nglobal = dims(1)
         nsub = self%domain_count
-
+        
         n2 = dims(2)
         n3 = dims(3)
         If (ind .ne. dind) Then
@@ -585,7 +612,7 @@ Contains
                 DO hh = 1, nsub
                     !scaling = self%scaling(hh)
                     n = self%npoly(hh)
-
+                    
                     buffer(hoff+n-1,j,k,dind) = 0.0d0
                     buffer(hoff+n-2,j,k,dind) = 2.0d0*(n-1)*buffer(hoff+n-1,j,k,ind) !*scaling
                     Do i = n-3,0, -1
@@ -597,7 +624,7 @@ Contains
                 Enddo
             Enddo
          !$OMP END PARALLEL DO
-            If (dorder .gt. 1) Then
+            If (dorder .gt. 1) Then 
                 Allocate(dbuffer(0:nglobal-1,1:dorder,0:cp_nthreads-1))
             !$OMP PARALLEL PRIVATE(i,j,k,trank,order,kstart,kend,nthr,n,hh,hoff)
 #ifdef useomp
@@ -623,7 +650,7 @@ Contains
                             dbuffer(hoff+n-2,order,trank) = 2.0d0*(n-1)*dbuffer(hoff+n-1,order-1,trank)
                             Do i = n -3, 0, -1
                                 dbuffer(hoff+i,order,trank) = dbuffer(hoff+i+2,order,trank)+ &
-                                    & 2.0d0*(i+1)*dbuffer(hoff+i+1,order-1,trank)
+                                    & 2.0d0*(i+1)*dbuffer(hoff+i+1,order-1,trank)                       
                             Enddo
                             hoff = hoff+self%npoly(hh)
                             ENDDO
@@ -643,5 +670,81 @@ Contains
         Enddo
         Enddo
     End Subroutine Cheby_Deriv_Buffer_4D
+
+    Subroutine QI_Deriv_4D(self,ind,dind,buffer,dorder)
+#ifdef useomp 
+        Use Omp_lib
+#endif
+        Implicit None
+        Class (Cheby_Grid) :: self
+        Real*8,  Intent(InOut), Target :: buffer(0:,1:,1:,1:)    ! Makes it easier to reconcile with my IDL code
+        Integer, Intent(In)    :: ind, dind, dorder
+        Integer :: dims(4), n1, n2, n3, iorder
+        Type(C_ptr) :: dumptr
+
+        Real(kind=8), Pointer :: fptr2_deriv_start(:)
+        Real(kind=8), Pointer :: fptr2_field_start(:)
+
+        !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        ! These variables are for temporary wrapper due to de-aliasing details in Rayleigh
+
+        Integer :: nf1
+
+
+        ! initialize the derivative buffer to zero now
+        buffer(:,:,:,dind) = 0.0d0
+
+        dims = shape(buffer)
+        n1 = dims(1)
+        n2 = dims(2)
+        n3 = dims(3)
+
+        nf1 = (2*n1)/3
+        
+
+        !BM: I removed sta3=1, because always true for you.
+        !BM: I removed the check that N3.GE.1 (always true?)
+        !BM: (Nick, Delete these comments if OK)          
+
+        Do iorder = 1,dorder
+            !==================================================
+            ! ...... Point to the Field:
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            if (iorder.eq.1) Then
+               dumptr = C_Loc(buffer(1,1,1, ind))
+            Else
+               dumptr = C_Loc(buffer(1,1,1,dind))
+            End If
+            Call C_F_Pointer (dumptr, fptr2_field_start, [N1*N2*N3])
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ! ...... Point to the Derivative of the field:
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            dumptr = C_Loc(buffer(0,1,1,dind))  ! ignore n=nmax
+            Call C_F_Pointer (dumptr, fptr2_deriv_start, [N1*N2*N3])
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ! ...... Now copy for the in-place solve:
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            fptr2_deriv_start = fptr2_field_start
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ! ...... IN-PLACE LU SOLVE:
+            !        Size = nf1 - 1, 
+            !        nf1 coef set by hand to 0 (highest dealiased coef)
+            !        Takes N1 strides to jump over aliased coefs.
+            !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            Call wrap_LUsolve_band_d(dchebi, fptr2_deriv_start, N2*N3, N1, .False.)
+            buffer(nf1-1,:,:,dind) = 0.0d0 ! really the nf1 coef, but indexing starts at 0.
+            buffer(0,:,:,dind) = buffer(0,:,:,dind)*2
+            !==================================================
+        End Do  
+        !buffer(0,:,:,dind) = buffer(0,:,:,dind)*2
+        
+ 
+
+        !Do k = 1, n3
+        !Do j = 1, n2
+        !buffer(:,j,k,dind) = buffer(:,j,k,dind)*(self%deriv_scaling(:)**dorder)
+        !Enddo
+        !Enddo
+    End Subroutine QI_Deriv_4D   
 
 End Module Chebyshev_Polynomials
