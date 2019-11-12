@@ -61,6 +61,9 @@ Module Controls
     Logical :: advect_reference_state = .false.  ! Set to true to advect the reference state
                                                 ! Generally only do this if reference state is nonadiabatic
 
+    Logical :: Centrifugal_Force = .false.
+    Logical :: Coriolis_Force = .true.
+
     ! --- This flag determines if the code is run in benchmark mode
     !     0 (default) is no benchmarking.  1-5 are various accuracy benchmarks (see documentation)
     Integer :: benchmark_mode = 0
@@ -70,7 +73,7 @@ Module Controls
     Namelist /Physical_Controls_Namelist/ magnetism, nonlinear, rotation, lorentz_forces, &
                 & viscous_heating, ohmic_heating, advect_reference_state, benchmark_mode, &
                 & benchmark_integration_interval, benchmark_report_interval, &
-                & momentum_advection, inertia
+                & momentum_advection, inertia, centrifugal_force, coriolis_force
 
     !///////////////////////////////////////////////////////////////////////////
     !   Temporal Controls

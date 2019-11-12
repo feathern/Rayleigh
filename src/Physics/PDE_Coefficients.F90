@@ -55,6 +55,7 @@ Module PDE_Coefficients
         Real*8, Allocatable :: heating(:)
 
         Real*8 :: Coriolis_Coeff ! Multiplies z_hat x u in momentum eq.
+        Real*8 :: Centrifugal_Coeff
         Real*8 :: Lorentz_Coeff ! Multiplies (Del X B) X B in momentum eq.
         Real*8, Allocatable :: Buoyancy_Coeff(:)    ! Multiplies {S,T} in momentum eq. ..typically = gravity/cp
         Real*8, Allocatable :: dpdr_w_term(:)  ! multiplies d_by_dr{P/rho} in momentum eq.
@@ -263,6 +264,8 @@ Contains
             ref%Buoyancy_Coeff(i) = amp*(radius(i)/radius(1))**gravity_power
         Enddo
 
+
+
         pressure_specific_heat = 1.0d0
         Call initialize_reference_heating()
         If (heating_type .eq. 0) Then
@@ -286,6 +289,7 @@ Contains
         ref%dpdr_w_term(:)        =  ref%density*pscaling
         ref%pressure_dwdr_term(:) = -1.0d0*ref%density*pscaling
         ref%Coriolis_Coeff        =  2.0d0/Ekman_Number
+        ref%Centrifugal_Coeff     =  1.0d0/(Ekman_Number*Ekman_Number)
 
         nu_top       = 1.0d0
         kappa_top       = 1.0d0/Prandtl_Number
