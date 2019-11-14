@@ -137,7 +137,7 @@ Module Diagnostics_Base
     Integer :: ncorrect = 0  ! Number of fields whose ell=0 mean we need to substract
     Real*8, Allocatable :: mean_3dbuffer(:,:,:,:)
     Real*8, Allocatable :: mean_ell0buffer(:,:)
-    Integer :: cforce_r, cforce_theta, cforce_phi
+    Integer :: cenforce_r, cforce_r, cforce_theta, cforce_phi
     Integer :: aforce_r, aforce_theta, aforce_phi
     Integer :: aforcepp_r, aforcepp_theta, aforcepp_phi
     Integer :: aforcemm_r, aforcemm_theta, aforcemm_phi

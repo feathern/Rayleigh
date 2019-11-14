@@ -51,7 +51,7 @@ Contains
         If (compute_quantity(cen_force_r)) Then
             DO_PSI
                 qty(PSI) = -ref%Centrifugal_Coeff*sintheta(t)*radius(r)* &
-                           sintheta(t)*(buffer(PSI,tvar)-ell0_values(r,tvar))
+                           sintheta(t)*buffer(PSI,tvar) - mean_ell0buffer(r,cenforce_r)
             END_DO
             Call Add_Quantity(qty)
         Endif
@@ -67,7 +67,7 @@ Contains
         If (compute_quantity(cen_mforce_r)) Then
             DO_PSI
                 qty(PSI) = -ref%Centrifugal_Coeff*sintheta(t)*radius(r)* &
-                           sintheta(t)*(m0_values(PSI2,tvar)-ell0_values(r,tvar))
+                           sintheta(t)*m0_values(PSI2,tvar) - mean_ell0buffer(r,cenforce_r)
             END_DO
             Call Add_Quantity(qty)
         Endif

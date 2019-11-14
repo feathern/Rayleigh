@@ -49,6 +49,12 @@ Contains
             cforce_r = ncorrect
         Endif
 
+        If (compute_quantity(cen_force_r) .or. &
+            compute_quantity(cen_mforce_r) ) Then
+            ncorrect = ncorrect+1
+            cenforce_r = ncorrect
+        Endif
+
         !If (compute_quantity(coriolis_force_theta) .or. &
         !    compute_quantity(coriolis_mforce_theta) ) Then
         !    ncorrect     = ncorrect+1
@@ -220,6 +226,16 @@ Contains
             END_DO
             compute_mean_correct=.true.
         Endif
+
+        If (compute_quantity(cen_force_r) .or. &
+            compute_quantity(cen_mforce_r) ) Then
+            Call Compute_Centrifugal_Force_r(buffer)
+            DO_PSI
+                mean_3dbuffer(PSI,cenforce_r) = qty(PSI)
+            END_DO
+            compute_mean_correct=.true.
+        Endif
+
 
         !If (compute_quantity(coriolis_force_theta) .or. &
         !    compute_quantity(coriolis_mforce_theta) ) Then
@@ -455,6 +471,18 @@ Contains
             qty(PSI) = ref%density(r)*coriolis_term*sintheta(t)*buffer(PSI,vphi)
         END_DO
     End Subroutine Compute_Coriolis_Force_r
+
+    Subroutine Compute_Centrifugal_Force_r(buffer)
+        Implicit None
+        Real*8, Intent(InOut) :: buffer(1:,my_r%min:,my_theta%min:,1:)
+        Integer :: r,k, t
+
+        DO_PSI
+            qty(PSI) = -ref%Centrifugal_Coeff*sintheta(t)*radius(r)* &
+                       sintheta(t)*buffer(PSI,tvar)
+        END_DO
+
+    End Subroutine Compute_Centrifugal_Force_r
 
     Subroutine Compute_Coriolis_Force_theta(buffer)
         Implicit None
