@@ -122,12 +122,12 @@
     Integer, Parameter :: jp_cross_bp_theta = mom_eq_off+61 ! :tex: $c_4\left[\left(\boldsymbol{\nabla}\times\boldsymbol{B'}\right)\times\boldsymbol{B'}\right]_\theta$
     Integer, Parameter :: jp_cross_bp_phi   = mom_eq_off+62 ! :tex: $c_4\left[\left(\boldsymbol{\nabla}\times\boldsymbol{B'}\right)\times\boldsymbol{B'}\right]_\phi$
 
-    Integer, Parameter :: cen_force_r     = mom_eq_off+63 !:tex: $null$
-    Integer, Parameter :: cen_force_theta = mom_eq_off+64 !:tex: $null$
+    Integer, Parameter :: cen_force_r     = mom_eq_off+63 ! :tex: $null$
+    Integer, Parameter :: cen_force_theta = mom_eq_off+64 ! :tex: $null$
 
-    Integer, Parameter :: cen_pforce_r     = mom_eq_off+65 !:tex: $null$
-    Integer, Parameter :: cen_pforce_theta = mom_eq_off+66 !:tex: $null$
+    Integer, Parameter :: cen_pforce_r     = mom_eq_off+65 ! :tex: $null$
+    Integer, Parameter :: cen_pforce_theta = mom_eq_off+66 ! :tex: $null$
 
-    Integer, Parameter :: cen_mforce_r     = mom_eq_off+67 !:tex: $null$
-    Integer, Parameter :: cen_mforce_theta = mom_eq_off+68 !:tex: $null$
+    Integer, Parameter :: cen_mforce_r     = mom_eq_off+67 ! :tex: $null$
+    Integer, Parameter :: cen_mforce_theta = mom_eq_off+68 ! :tex: $null$
 

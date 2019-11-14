@@ -64,4 +64,10 @@ Momentum Equation
  :math:`c_4\left[\left(\boldsymbol{\nabla}\times\boldsymbol{B'}\right)\times\boldsymbol{B'}\right]_r`                            1260    jp\_cross\_bp\_r     
  :math:`c_4\left[\left(\boldsymbol{\nabla}\times\boldsymbol{B'}\right)\times\boldsymbol{B'}\right]_\theta`                       1261    jp\_cross\_bp\_theta 
  :math:`c_4\left[\left(\boldsymbol{\nabla}\times\boldsymbol{B'}\right)\times\boldsymbol{B'}\right]_\phi`                         1262    jp\_cross\_bp\_phi   
+ :math:`null`                                                                                                                    1263    cen\_force\_r     
+ :math:`null`                                                                                                                    1264    cen\_force\_theta 
+ :math:`null`                                                                                                                    1265    cen\_pforce\_r     
+ :math:`null`                                                                                                                    1266    cen\_pforce\_theta 
+ :math:`null`                                                                                                                    1267    cen\_mforce\_r     
+ :math:`null`                                                                                                                    1268    cen\_mforce\_theta 
 =============================================================================================================================== ====== ========================== 
