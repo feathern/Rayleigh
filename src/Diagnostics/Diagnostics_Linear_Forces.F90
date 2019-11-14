@@ -31,7 +31,72 @@ Contains
         Call Compute_Coriolis_Force(buffer)
         Call Compute_Viscous_Force(buffer)
         Call Compute_Pressure_Force(buffer)
+        Call Compute_Centrifugal_Force(buffer)
     End Subroutine Compute_Linear_Forces
+
+    Subroutine Compute_Centrifugal_Force(buffer)
+        Implicit None
+        Real*8, Intent(InOut) :: buffer(1:,my_r%min:,my_theta%min:,1:)
+        Integer :: r,k, t
+!~~~~~~~~~~
+!    Integer, Parameter :: cen_force_r     = mom_eq_off+63 !:tex: $null$
+!    Integer, Parameter :: cen_force_theta = mom_eq_off+64 !:tex: $null$
+!
+!    Integer, Parameter :: cen_pforce_r     = mom_eq_off+66 !:tex: $null$
+!    Integer, Parameter :: cen_pforce_theta = mom_eq_off+67 !:tex: $null$
+!
+!    Integer, Parameter :: cen_mforce_r     = mom_eq_off+69 !:tex: $null$
+!    Integer, Parameter :: cen_mforce_theta = mom_eq_off+70 !:tex: $null$
+!~~~~~~~~
+        If (compute_quantity(cen_force_r)) Then
+            DO_PSI
+                qty(PSI) = -ref%Centrifugal_Coeff*sintheta(t)*radius(r)* &
+                           sintheta(t)*(buffer(PSI,tvar)-ell0_values(r,tvar))
+            END_DO
+            Call Add_Quantity(qty)
+        Endif
+
+        If (compute_quantity(cen_force_theta)) Then
+            DO_PSI
+                qty(PSI) = -ref%Centrifugal_Coeff*sintheta(t)*radius(r)* &
+                        costheta(t)*buffer(PSI,tvar)
+            END_DO
+            Call Add_Quantity(qty)
+        Endif
+
+        If (compute_quantity(cen_mforce_r)) Then
+            DO_PSI
+                qty(PSI) = -ref%Centrifugal_Coeff*sintheta(t)*radius(r)* &
+                           sintheta(t)*(m0_values(PSI2,tvar)-ell0_values(r,tvar))
+            END_DO
+            Call Add_Quantity(qty)
+        Endif
+
+        If (compute_quantity(cen_mforce_theta)) Then
+            DO_PSI
+                qty(PSI) = -ref%Centrifugal_Coeff*sintheta(t)*radius(r)* &
+                        costheta(t)*m0_values(PSI2,tvar)
+            END_DO
+            Call Add_Quantity(qty)
+        Endif
+
+        If (compute_quantity(cen_pforce_r)) Then
+            DO_PSI
+                qty(PSI) = -ref%Centrifugal_Coeff*sintheta(t)*radius(r)* &
+                           sintheta(t)*(fbuffer(PSI,tvar)-ell0_values(r,tvar))
+            END_DO
+            Call Add_Quantity(qty)
+        Endif
+
+        If (compute_quantity(cen_pforce_theta)) Then
+            DO_PSI
+                qty(PSI) = -ref%Centrifugal_Coeff*sintheta(t)*radius(r)* &
+                        costheta(t)*fbuffer(PSI,tvar)
+            END_DO
+            Call Add_Quantity(qty)
+        Endif
+
+    End Subroutine Compute_Centrifugal_Force
 
     Subroutine Compute_Buoyancy_Force(buffer)
         Implicit None
