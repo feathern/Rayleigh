@@ -304,7 +304,7 @@ Contains
         self%n1p = 0    ! This line is here purely so that the intel compiler does not
         ! throw an unused variable warning when warn-all is used.
         Call Exit_Comm_Lib(error)
-        !STOP
+        Call Exit(1)
     End Subroutine Finalize_Framework
 
 End Module Parallel_Framework

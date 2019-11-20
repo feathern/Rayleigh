@@ -32,7 +32,7 @@ Module ProblemSize
 
     !//////////////////////////////////////////////////////////////
     ! Processor Configuration
-    Integer :: ncpu = 1, nprow = 1, npcol =1 , npout = 1
+    Integer :: ncpu = 1, nprow = -1, npcol =-1 , npout = 1
     Integer :: my_rank      ! This is the rank within a run communicator
     Integer :: global_rank  ! This differs from my_rank only when multi-run mode is active
     Integer :: ncpu_global  ! Same as ncpu unless multi-run mode is active
@@ -137,6 +137,12 @@ Contains
         Integer :: cpu_tmp(1)
         Integer :: ppars(1:10)
         !/////////////////////////////////////////////////////////
+        ! Determine nprow and npcol, based on ncpu, if desired
+        !If ( (nprow .lt. 2) .or. ( npcol .lt. 2 ) ) Then
+        !    Call Auto_Assign_Domain_Decomp()
+        !Endif
+
+        !/////////////////////////////////////////////////////////
         ! Initialize MPI and load balancing (if no errors detected)
         ncpu = nprow*npcol
         ppars(1) = Spherical
@@ -153,6 +159,7 @@ Contains
             Call pfi%init(ppars,run_cpus, grid_error)
         Else
             cpu_tmp(1) = ncpu
+            Call Auto_Assign_Domain_Decomp()  ! need logic for if nprow,npcol .lt. 1
             Call pfi%init(ppars,cpu_tmp,grid_error)
         Endif
         my_rank = pfi%gcomm%rank
@@ -170,6 +177,55 @@ Contains
         Call StopWatch(init_time)%startclock()
         Call StopWatch(walltime)%startclock()
     End Subroutine Init_Comm
+
+    Subroutine Auto_Assign_Domain_Decomp()
+        Implicit None
+        Integer :: f1, f2, imax, i, j
+        Integer :: fcount, nfact_ok
+        Integer :: nprow_max, npcol_max
+        Integer, Allocatable, Dimension(:,:) :: factors_of_ncpu, factor_diff, suitable
+        Real*8 :: ncpu_sqrt
+        ncpu_sqrt = sqrt(dble(ncpu))
+        imax = int(ncpu_sqrt)+1
+        npcol_max = n_r
+        nprow_max = n_l/2 + Mod(n_l,2)
+
+        Allocate(factors_of_ncpu(2,imax))
+        Allocate(factor_diff(2,imax))
+        Allocate(suitable(2,imax)) ! 1=> (f1,f2) -> (nprow, npcol), 2=> (f1,f2) -> (npcol,nprow)
+
+
+        ! Identify all factors of ncpu
+        fcount = 0
+        Do f1 = 1, imax
+            If (Mod(ncpu,f1) .eq. 0) Then
+                fcount = fcount+1
+                f2 = ncpu/f1
+                factors_of_ncpu(1:2,fcount) = (/ f1, f2 /)
+                If (global_rank .eq. 0) Write(6,*)'f1,f2: ',f1,f2 , ncpu
+            Endif
+        Enddo
+
+        ! Test whether each (f1,f2) pair is suitable,
+        ! but not necessarily optimal, as a choice for
+        ! (nprow, npcol), (npcol, nprow), or both.
+        Do i = 1, fcount
+            f1 = factors_of_ncpu(1,i)
+            f2 = factors_of_ncpu(2,i)
+            If ((f1 .le. nprow_max) .and. (f2 .le. npcol_max) ) Then
+                suitable(1,i) = 1
+                factor_diff(1,i) = abs(f1-f2)
+                If (global_rank .eq. 0) Write(6,*)'nprow / npcol: ',f1,f2 
+            Endif
+            If ((f2 .le. nprow_max) .and. (f1 .le. npcol_max) ) Then
+                suitable(2,i) = 1 
+                factor_diff(2,i) = abs(f1-f2)
+                If (global_rank .eq. 0) Write(6,*)'nprow / npcol: ',f2,f1 
+            Endif
+        Enddo
+        
+
+    End Subroutine Auto_Assign_Domain_Decomp
 
     Subroutine Establish_Grid_Parameters()
         Implicit None
