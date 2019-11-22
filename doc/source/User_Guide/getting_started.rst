@@ -1,10 +1,11 @@
-Rayleigh User Manual
+Getting Started
 ********************
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   overview
-   getting_started
-  
+   
+   installation
+   devel_environment
+   
