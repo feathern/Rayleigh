@@ -26,7 +26,7 @@ Module Initial_Conditions
     Use Legendre_Transforms, Only : Legendre_Transform
     Use SendReceive
     Use Math_Constants
-    Use Checkpointing, Only : read_checkpoint, read_checkpoint_alt
+    Use Checkpointing, Only : read_checkpoint
     Use Generic_Input, Only : read_input
     Use Controls
     Use Timers
@@ -250,11 +250,9 @@ Contains
         tempfield%p1a(:,:,:,:) = 0.0d0
 
         Call StopWatch(cread_time)%StartClock()
-        If (read_chk_type .eq. 2) Then
-            Call Read_Checkpoint_Alt(tempfield%p1a,wsp%p1b,iteration,rpars)
-        Else
-            Call Read_Checkpoint(tempfield%p1a,wsp%p1b,iteration,rpars)
-        Endif
+
+        Call Read_Checkpoint(tempfield%p1a,wsp%p1b,iteration,rpars)
+
         Call StopWatch(cread_time)%Increment()
 
         If (rescale_velocity) Then
@@ -899,14 +897,14 @@ Contains
             tempfield%s2b(mp)%data(:,:,:,:) = 0.0d0
             If (m .eq. 0) Then
                 Do r = my_r%min, my_r%max
-                    tempfield%s2b(mp)%data(1,r,1,1) = C10_bottom/radius(r)
+                    tempfield%s2b(mp)%data(1,r,1,1) = C10_bottom*rmin/radius(r)
                 Enddo
             Endif
 
             If (m .eq. 1) Then
                 Do r = my_r%min, my_r%max
-                    tempfield%s2b(mp)%data(1,r,1,1) = C11_bottom/radius(r)
-                    tempfield%s2b(mp)%data(1,r,2,1) = C1m1_bottom/radius(r)
+                    tempfield%s2b(mp)%data(1,r,1,1) = C11_bottom*rmin/radius(r)
+                    tempfield%s2b(mp)%data(1,r,2,1) = C1m1_bottom*rmin/radius(r)
                 Enddo
             Endif
 
