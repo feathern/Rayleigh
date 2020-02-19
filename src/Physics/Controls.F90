@@ -30,6 +30,7 @@ Module Controls
     Integer :: nruns = 0 ! only set to non-zero value if multi_run_mode is True
     Integer, Allocatable :: run_cpus(:)
     Character*120 :: my_path = ''
+    Integer :: my_sim_id = 1  ! Simulation ID (needed for main_input broadcast)
 
     !////////////////////////////////////////////////////////////////////////////////
     ! Numerical Controls
@@ -60,6 +61,9 @@ Module Controls
     Logical :: ohmic_heating = .true.
     Logical :: advect_reference_state = .false.  ! Set to true to advect the reference state
                                                 ! Generally only do this if reference state is nonadiabatic
+
+    Logical :: Centrifugal_Force = .false.
+    Logical :: Coriolis_Force = .true.
 
     ! --- This flag determines if the code is run in benchmark mode
     !     0 (default) is no benchmarking.  1-5 are various accuracy benchmarks (see documentation)
@@ -136,6 +140,8 @@ Module Controls
     Real*8, Allocatable :: global_msgs(:)
     Real*8 :: kill_signal = 0.0d0  ! Signal will be passed in Real*8 buffer, but should be integer-like
     Integer :: nglobal_msgs = 5  ! timestep, elapsed since checkpoint, kill_signal/global message, simulation time, terminate file found
+
+    Logical :: full_restart = .false.  ! Set to true if a full-restart is initiated from the command line
 
 Contains
     Subroutine Initialize_Controls()

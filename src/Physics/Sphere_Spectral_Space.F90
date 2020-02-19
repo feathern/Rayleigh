@@ -30,6 +30,7 @@ Module Sphere_Spectral_Space
     Use ClockInfo
     Use Timers
     Use Sphere_Linear_Terms
+    Use Math_Constants
     Implicit None
     Type(SphericalBuffer) :: ctemp ! workspace
 Contains
@@ -128,10 +129,22 @@ Contains
         Call gridcp%dealias_buffer(ctemp%p1a)    ! de-alias
 
         Call gridcp%From_Spectral(ctemp%p1a,ctemp%p1b)
+
+
+        ! At output time, pressure (and dpdr) needs to be an average
+        ! of current + previous timesteps.  Otherwise
+        ! a saw-toothing issues occurs resulting from the CN scheme.
+        ! psave(1) is for P at current timestep
+        ! psave(2) is for P previous timestep
+        ! psave(3) is for dPdr at current timestep
+        ! psave(4) is for dPdr at previous timestep
+        psave%p1a(:,:,:,4) = psave%p1a(:,:,:,3)
+        psave%p1a(:,:,:,3) = ctemp%p1b(:,:,:,2)
         If (output_iteration) Then
             ! Grab dpdr
             Call cobuffer%construct('p1a')
-            cobuffer%p1a(:,:,:,dpdr_cb) = ctemp%p1b(:,:,:,2)
+            cobuffer%p1a(:,:,:,dpdr_cb) = alpha_implicit*psave%p1a(:,:,:,3)+ &
+                                          (One-alpha_implicit)*psave%p1a(:,:,:,4) 
         Endif
 
 
@@ -225,22 +238,26 @@ Contains
 
         Call wsp%deconstruct('p1b')
         Call StopWatch(psolve_time)%increment()
-
         Call StopWatch(ctranspose_time)%startclock()
 
 
-
+        ! dpdr has already been stored -- grab pressure as well
+        psave%p1a(:,:,:,2) = psave%p1a(:,:,:,1)
+        psave%p1a(:,:,:,1) = wsp%p1a(:,:,:,pvar)
 
         If (output_iteration) Then
             !Convert p/rho to p
             ! We already took d/dr(p/rho), so we'll fix that later
             Do m = 1, my_num_lm
                 Do i = 1, 2
-                    wsp%p1a(:,i,m,pvar) = wsp%p1a(:,i,m,pvar)*ref%density(:)
+                    wsp%p1a(:,i,m,pvar) = (psave%p1a(:,i,m,1)*alpha_implicit + &
+                                          psave%p1a(:,i,m,2)*(One-alpha_implicit) ) &
+                                          *ref%density(:)
                 Enddo
             Enddo
             Call cobuffer%reform()
         Endif
+
         Call wsp%reform()    ! move from p1a to s2a
         Call StopWatch(ctranspose_time)%increment()
 

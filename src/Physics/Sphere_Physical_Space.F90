@@ -362,15 +362,30 @@ Contains
             !$OMP END PARALLEL DO
         Endif
 
-        ! Add Coriolis Terms if so desired
+        ! Add Coriolis and Centrifugal Terms if so desired
         If (rotation) Then
-        !    ! [- 2 z_hat cross u ]_r = 2 sintheta u_phi
-            !$OMP PARALLEL DO PRIVATE(t,r,k)
-            DO_IDX
-                RHSP(IDX,wvar) = RHSP(IDX,wvar) + &
-                    & ref%Coriolis_Coeff*sintheta(t)*FIELDSP(IDX,vphi)*R_squared(r)
-            END_DO
-            !$OMP END PARALLEL DO
+
+            If (Coriolis_Force) Then
+                !    ! [- 2 z_hat cross u ]_r = 2 sintheta u_phi
+                !$OMP PARALLEL DO PRIVATE(t,r,k)
+                DO_IDX
+                    RHSP(IDX,wvar) = RHSP(IDX,wvar) + &
+                        & ref%Coriolis_Coeff*sintheta(t)*FIELDSP(IDX,vphi)*R_squared(r)
+                END_DO
+                !$OMP END PARALLEL DO
+            Endif
+
+            If (Centrifugal_Force) Then
+                !$OMP PARALLEL DO PRIVATE(t,r,k)
+                DO_IDX
+                    RHSP(IDX,wvar) = RHSP(IDX,wvar) - &
+                        ref%Centrifugal_Coeff*sintheta(t)* &
+                        radius(r)*R_squared(r)*FIELDSP(IDX,tvar)*sintheta(t)
+                END_DO
+                !$OMP END PARALLEL DO
+
+            Endif
+
         Endif
 
 
@@ -480,14 +495,27 @@ Contains
         Endif
 
         If (rotation) Then
-            ! Add - the coriolis term (part of -RHS of theta)
-            ! [2 z_hat cross u]_theta = -2 costheta u_phi
 
-            !$OMP PARALLEL DO PRIVATE(t,r,k)
-            DO_IDX
-                RHSP(IDX,pvar) = RHSP(IDX,pvar)- ref%Coriolis_Coeff*costheta(t)*FIELDSP(IDX,vphi)
-            END_DO
-            !$OMP END PARALLEL DO
+            If (Coriolis_Force) Then
+                ! Add - the coriolis term (part of -RHS of theta)
+                ! [2 z_hat cross u]_theta = -2 costheta u_phi
+
+                !$OMP PARALLEL DO PRIVATE(t,r,k)
+                DO_IDX
+                    RHSP(IDX,pvar) = RHSP(IDX,pvar)- ref%Coriolis_Coeff*costheta(t)*FIELDSP(IDX,vphi)
+                END_DO
+                !$OMP END PARALLEL DO
+            Endif
+
+            If (Centrifugal_Force) Then
+                !$OMP PARALLEL DO PRIVATE(t,r,k)
+                DO_IDX
+                    RHSP(IDX,pvar) = RHSP(IDX,pvar) + &
+                        ref%Centrifugal_Coeff*costheta(t)* &
+                        radius(r)*FIELDSP(IDX,tvar)*sintheta(t)
+                END_DO
+                !$OMP END PARALLEL DO
+            Endif
         Endif
 
         ! Multiply advection/coriolis pieces by rho

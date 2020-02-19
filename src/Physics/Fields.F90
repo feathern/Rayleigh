@@ -83,7 +83,8 @@ Module Fields
 
 
 
-    Type(SphericalBuffer) :: wsp ! Primary workspace for the entire run
+    Type(SphericalBuffer) :: wsp   ! Primary workspace for the entire run
+    Type(SphericalBuffer) :: psave ! Buffer used to save pressure from previous timestep
     Integer :: wsfcount(3,2)     ! wsp field count for each configuration
 
     Type(SphericalBuffer) :: cobuffer ! Workspace for holding output-related variables
@@ -296,6 +297,7 @@ Contains
     Subroutine Initialize_Diagnostic_Indices()
         Implicit None
         Character*3 :: config
+        Integer :: psfcount(3,2)     ! for pressure save
         vindex(1)  = vr
         vindex(2)  = vtheta
         vindex(3)  = vphi
@@ -373,6 +375,16 @@ Contains
         !Write(6,*)'NEW CHECK: ', wsp%nf3a, wsp_indices%c3a_counter
         output_nextra = wsp_indices%c3a_counter- wsfcount(3,1)
         !Write(6,*)'CHECK:  ', output_nextra, wsp%nf3a, wsfcount(3,1)
+
+
+        ! Finally, initialize the pressure-save buffer to deal with CN
+        ! even/odd time-stepping issue.
+
+        psfcount(:,:) = 4
+        Call psave%init(field_count = psfcount, config = 'p1a')
+        Call psave%construct('p1a')    ! We will always start in p1b - should do wsp%set_config('p1b')
+        psave%p1a(:,:,:,:) = 0.0d0     ! All fields are zero initially
+
     End Subroutine Initialize_Diagnostic_Indices
 
 End Module Fields
