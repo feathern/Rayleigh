@@ -134,14 +134,16 @@ The general form of the momentum equation solved by Rayleigh is given by
 .. math::
    :label: momentum
 
-       \mathrm{f}_1(r)\left[\frac{\partial \boldsymbol{v}}{\partial t}  + \boldsymbol{v}\cdot\boldsymbol{\nabla}\boldsymbol{v}  %advection
+       {\mathrm{f}_1(r)\left[\frac{\partial \boldsymbol{v}}{\partial t}  + \boldsymbol{v}\cdot\boldsymbol{\nabla}\boldsymbol{v}  %advection
         + c_1\boldsymbol{\hat{z}}\times\boldsymbol{v} \right]  = % Coriolis
        c_2\,\mathrm{f}_2(r)\Theta\,\boldsymbol{\hat{r}} % buoyancy
-        - c_3\,\mathrm{f}_1(r)\boldsymbol{\nabla}\left(\frac{P}{\mathrm{f}_1(r)}\right) % pressure
+        + c_{11}\,\mathrm{f}_{15}(r)\,\Theta\,\boldsymbol{s}} % centrifugal buoyancy
+        \atop
+        \,\,\,- c_3\,\mathrm{f}_1(r)\boldsymbol{\nabla}\left(\frac{P}{\mathrm{f}_1(r)}\right) % pressure
         + c_4\left(\boldsymbol{\nabla}\times\boldsymbol{B}\right)\times\boldsymbol{B} % Lorentz Force
         + c_5\boldsymbol{\nabla}\cdot\boldsymbol{\mathcal{D}},
 
-where the stress tensor :math:`\mathcal{D}` is given by
+where :math:`\boldsymbol{s}` is the cylindrical radius vector, and the stress tensor :math:`\mathcal{D}` is given by
 
 .. math::
    :label: stress_tensor
@@ -167,13 +169,14 @@ and
 
        \boldsymbol{\nabla}\cdot\boldsymbol{B}=0
 
-respectively. The evolution of :math:`\Theta` is described
+respectively. The evolution of :math:`\Theta` is described by
 
 .. math::
    :label: theta_evol
 
-   \mathrm{f}_1(r)\,\mathrm{f}_4(r)\left[\frac{\partial \Theta}{\partial t}  + \boldsymbol{v}\cdot\boldsymbol{\nabla}\Theta \right] =
-       c_6\,\boldsymbol{\nabla}\cdot\left[\mathrm{f}_1(r)\,\mathrm{f}_4(r)\,\mathrm{f}_5(r)\,\boldsymbol{\nabla}\Theta \right]
+   {\mathrm{f}_1(r)\,\mathrm{f}_4(r)\left[\frac{\partial \Theta}{\partial t}  + \boldsymbol{v}\cdot\boldsymbol{\nabla}\Theta +v_r\,\mathrm{f}_{14}(r)\right] =
+       c_6\,\boldsymbol{\nabla}\cdot\left[\mathrm{f}_1(r)\,\mathrm{f}_4(r)\,\mathrm{f}_5(r)\,\boldsymbol{\nabla}\Theta \right]}
+        \atop
         + c_{10}\mathrm{f}_6(r)
         + c_8\Phi(r,\theta,\phi)
         + c_9\mathrm{f}_7(r)\left[\boldsymbol{\nabla}\times\boldsymbol{B}\right]^2,
@@ -218,11 +221,12 @@ When run in dimensional, anelastic mode (cgs units; **reference_type=2**
        \mathrm{f}_5(r) &\rightarrow \kappa(r)\; &c_5 &\rightarrow 1 \\
        \mathrm{f}_6(r) &\rightarrow Q(r)\; &c_6 &\rightarrow 1  \\
        \mathrm{f}_7(r) &\rightarrow \eta(r)\; &c_7 &\rightarrow 1 \\
-       c_8&\rightarrow 1 &c_9 &\rightarrow \frac{1}{4\pi} \\
-       c_{10}&\rightarrow 1.\end{aligned}
+       \mathrm{f}_{14}(r) &\rightarrow \frac{\partial \hat{S(r)}}{\partial r}\; &c_8&\rightarrow 1 \\
+       \mathrm{f}_{15}(r) &\rightarrow \frac{\hat{\rho(r)}}{c_P}\; &c_9 &\rightarrow \frac{1}{4\pi} \\
+       c_{10}&\rightarrow 1 &c_{11}&\rightarrow \Omega^2.\end{aligned}
 
-Here, :math:`\hat{\rho}` and :math:`\hat{T}` are the reference-state
-density and temperature respectively. :math:`g` is the gravitational
+Here, :math:`\hat{\rho}` , :math:`\hat{T}` and :math:`\hat{S}` are the reference-state
+density temperature and entropy respectively. :math:`g` is the gravitational
 acceleration, :math:`c_P` is the specific heat at constant pressure, and
 :math:`\Omega_0` is the frame rotation rate. The viscous, thermal, and
 magnetic diffusivities are given by :math:`\nu`, :math:`\kappa`, and
