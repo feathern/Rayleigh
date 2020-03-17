@@ -113,7 +113,7 @@ Module PDE_Coefficients
     Real*8 :: gravity_power           = 0.0d0
     Real*8 :: Dissipation_Number      = 0.0d0
     Real*8 :: Modified_Rayleigh_Number = 0.0d0
-
+    Real*8 :: Froude_Number = 0.0d0
 
 
     Namelist /Reference_Namelist/ reference_type,poly_n, poly_Nrho, poly_mass,poly_rho_i, &
@@ -122,7 +122,7 @@ Module PDE_Coefficients
             & gravity_power, custom_reference_file,       &
             & Dissipation_Number, Modified_Rayleigh_Number, Heating_Integral,         &
             & override_constants, override_constant, ra_constants, with_custom_constants, &
-            & with_custom_functions, with_custom_reference
+            & with_custom_functions, with_custom_reference, Froude_Number
 
 
     !///////////////////////////////////////////////////////////////////////////////////////
@@ -224,6 +224,7 @@ Contains
 
         ref%Coriolis_Coeff = Zero
         ref%Lorentz_Coeff  = Zero
+        ref%Centrifugal_Coeff = Zero
 
     End Subroutine Allocate_Reference_State
 
@@ -263,7 +264,7 @@ Contains
         Do i = 1, N_R
             ref%Buoyancy_Coeff(i) = amp*(radius(i)/radius(1))**gravity_power
         Enddo
-
+        ref%Centrifugal_Coeff     = amp*Froude_Number
         pressure_specific_heat = 1.0d0
         Call initialize_reference_heating()
         If (heating_type .eq. 0) Then
@@ -287,7 +288,7 @@ Contains
         ref%dpdr_w_term(:)        =  ref%density*pscaling
         ref%pressure_dwdr_term(:) = -1.0d0*ref%density*pscaling
         ref%Coriolis_Coeff        =  2.0d0/Ekman_Number
-        ref%Centrifugal_Coeff     = 1.0d0/(Ekman_Number*Ekman_Number)
+
 
         nu_top       = 1.0d0
         kappa_top       = 1.0d0/Prandtl_Number
