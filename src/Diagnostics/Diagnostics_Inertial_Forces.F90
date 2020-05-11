@@ -124,7 +124,7 @@ Contains
 
             If (compute_quantity(v_grad_v_r) .or. compute_quantity(advec_work)) Then
                 DO_PSI
-                    qty(PSI) = mean_3dbuffer(PSI,aforce_r)-mean_ell0buffer(r,aforce_r)
+                    qty(PSI) = mean_3dbuffer(PSI,aforce_r)-0*mean_ell0buffer(r,aforce_r)
                 END_DO
                 If (compute_quantity(v_grad_v_r)) Call Add_Quantity(qty)
                 If (compute_quantity(advec_work)) Then

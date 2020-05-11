@@ -108,7 +108,7 @@ Contains
 
         If(compute_quantity(Coriolis_Force_r)) Then
             DO_PSI
-                qty(PSI) = mean_3dbuffer(PSI,cforce_r)-mean_ell0buffer(r,cforce_r)
+                qty(PSI) = mean_3dbuffer(PSI,cforce_r)-0*mean_ell0buffer(r,cforce_r)
             END_DO
             Call Add_Quantity(qty)
         Endif
@@ -245,7 +245,7 @@ Contains
         ! r-direction; Full
         If (compute_quantity(viscous_force_r) .or. compute_quantity(visc_work)) Then
             DO_PSI
-                qty(PSI) = mean_3dbuffer(PSI,vforce_r)-mean_ell0buffer(r,vforce_r)
+                qty(PSI) = mean_3dbuffer(PSI,vforce_r)-0*mean_ell0buffer(r,vforce_r)
             END_DO
             If (compute_quantity(viscous_force_r)) Call Add_Quantity(qty)
             If (compute_quantity(visc_work)) Then
