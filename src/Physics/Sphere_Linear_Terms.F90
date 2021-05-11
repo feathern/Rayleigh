@@ -652,13 +652,17 @@ Contains
                     Call Load_BC(lp,r,ceq,cvar,one,0)
                     Call Load_BC(lp,r,aeq,avar,one,0)
                 Endif
-                If (dipole_field_bottom) Then
+                If (dipole_field_bottom .or. dipole_field_bottom_implicit) Then
                     ! This ones a little different
                     ! We replace row N_R-1 with the condition that
                     ! dCdr @ radius(N_R) {not N_R-1} is fixed
                     Call Clear_Row(ceq,lp,N_R-1)
                     r = N_R-1
                     Call Load_BC(lp,r,ceq,cvar,one,1, reval=N_R)
+                    If (dipole_field_bottom_implicit) Then
+                        samp = One_Over_R(N_R)
+                        Call Load_BC(lp,r,ceq,cvar,samp,0, reval=N_R)
+                    Endif
                 Endif
 
             Endif    ! Magnetism

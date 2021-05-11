@@ -45,6 +45,7 @@ Module BoundaryConditions
     Logical :: Fix_poloidalfield_bottom = .False.
     Logical :: Impose_Dipole_Field = .False.
     Logical :: Dipole_Field_Bottom = .False.
+    Logical :: Dipole_Field_Bottom_Implicit = .False.
 
     Real*8  :: T_Bottom     = 1.0d0
     Real*8  :: T_Top        = 0.0d0
@@ -80,7 +81,7 @@ Module BoundaryConditions
         C10_bottom, C10_top, C11_bottom, C11_top, C1m1_bottom, C1m1_top, Br_bottom, &
         dipole_tilt_degrees, impose_dipole_field, no_slip_top, no_slip_bottom, &
         stress_free_top, stress_free_bottom, T_top_file, T_bottom_file, dTdr_top_file, dTdr_bottom_file, &
-        C_top_file, C_bottom_file, dipole_field_bottom
+        C_top_file, C_bottom_file, dipole_field_bottom, dipole_field_bottom_implicit
 
 Contains
 
@@ -108,7 +109,8 @@ Contains
 
         If (impose_dipole_field) fix_poloidalfield_top = .true.
 
-        If (impose_dipole_field .or. dipole_field_bottom) Then
+        If (impose_dipole_field .or. dipole_field_bottom .or. &
+            dipole_field_bottom_implicit) Then
             ! Set B.C.'s on the poloidal vector
             ! potential using the value of Br at
             ! the lower boundary.
@@ -234,6 +236,7 @@ Contains
                 bc_val = -C10_bottom/radius(N_R)
                 Call Set_BC(bc_val, 1,0,ceq,real_ind,3) ! 3 -> row N_r-1
             Endif
+            ! For implicit dipole field bottom, we just leave it set to zero
 
         Endif
         Call Store_BC_Mask(bc_values)  ! to checkpointing
