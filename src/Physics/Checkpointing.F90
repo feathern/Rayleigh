@@ -104,7 +104,7 @@ Contains
         nfs(:) = numfields*2
         Call chktmp%init(field_count = nfs, config = 'p1a') ! Persistent throughout run
 
-        Allocate(boundary_mask(2, 2, my_num_lm, numfields))
+        Allocate(boundary_mask(3, 2, my_num_lm, numfields))
         boundary_mask(:,:,:,:) = 0.0d0
 
         nfs(:) = 1
@@ -165,6 +165,7 @@ Contains
         Do i = 1, numfields
             bctmp%p1a(  2*(i-1)+1,:,:,1) = boundary_mask(1,:,:,i)
             bctmp%p1a(  2*(i-1)+2,:,:,1) = boundary_mask(2,:,:,i)
+            
         Enddo
 
         Call bctmp%reform() ! move to s2a

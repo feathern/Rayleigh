@@ -652,6 +652,14 @@ Contains
                     Call Load_BC(lp,r,ceq,cvar,one,0)
                     Call Load_BC(lp,r,aeq,avar,one,0)
                 Endif
+                If (dipole_field_bottom) Then
+                    ! This ones a little different
+                    ! We replace row N_R-1 with the condition that
+                    ! dCdr @ radius(N_R) {not N_R-1} is fixed
+                    Call Clear_Row(ceq,lp,N_R-1)
+                    r = N_R-1
+                    Call Load_BC(lp,r,ceq,cvar,one,1, reval=N_R)
+                Endif
 
             Endif    ! Magnetism
 
@@ -667,7 +675,7 @@ Contains
         Integer :: uind, lind
         Integer :: real_ind, imag_ind
 
-        Call Apply_Boundary_Mask(bc_values)
+        Call Apply_Boundary_Mask_New(bc_values, num_bc_levels,bc_levels)
         Call Domain_Continuity()
 
     End Subroutine Enforce_Boundary_Conditions

@@ -416,7 +416,29 @@ Module Linear_Solve
 
         Enddo
     End Subroutine Apply_Boundary_Mask
-    
+
+    !================================
+    ! New multi-row BC
+    Subroutine Apply_Boundary_Mask_New(bcmask,n_bc_levels, bc_lev)
+        Implicit None
+        Integer :: i,j, k, eqind
+        Real*8, Intent(In) :: bcmask(:,:,:,:)
+        Integer, Intent(In) :: n_bc_levels(:), bc_lev(:)
+
+
+        Do k = 1, n_equations
+
+            If (equation_set(1,k)%primary) Then
+                Do j = 1, equation_set(1,k)%nlinks
+                    eqind = equation_set(1,k)%links(j)
+                    Do i = 1, n_bc_levels(eqind)
+                        equation_set(1,k)%RHS(bc_lev(i)+(j-1)*ndim1,:,:) = bcmask(i,:,:,eqind) ! Upper boundary
+                    Enddo
+                Enddo
+            Endif
+
+        Enddo
+    End Subroutine Apply_Boundary_Mask_New    
 
     !===========================
     !  Matrix Solve Routine
@@ -845,12 +867,13 @@ Module Linear_Solve
     End Subroutine print_column
 
 
-    Subroutine Load_BC(mode,row,eqind,varind,amp,dorder,integral)
+    Subroutine Load_BC(mode,row,eqind,varind,amp,dorder,integral,reval)
         Implicit None
         Integer, Intent(In) :: mode, row, eqind,varind,dorder
         Integer :: colblock, rowblock
         real*8, Intent(In) :: amp
         real*8, Intent(In), Optional :: integral(:)
+        Integer, Intent(In), Optional :: reval
         real*8, Pointer, Dimension(:,:) :: mpointer
         mpointer => equation_set(mode,eqind)%mpointer
         colblock = equation_set(mode,eqind)%colblock(varind)
@@ -861,7 +884,12 @@ Module Linear_Solve
 
         Else
             If (chebyshev) Then
-                Call Load_Single_Row_Cheby(row,rowblock,colblock,amp,dorder,mpointer, boundary = .true.)
+                If (present(reval)) Then
+                    Call Load_Single_Row_Cheby(row,rowblock,colblock,amp,dorder,mpointer, &
+                        boundary = .true., r_eval = reval)
+                Else
+                    Call Load_Single_Row_Cheby(row,rowblock,colblock,amp,dorder,mpointer, boundary = .true.)                
+                Endif
             Else
                 Call Load_Single_Row(row,rowblock,colblock,amp,dorder,mpointer, boundary = .true.)
             Endif
@@ -1464,9 +1492,10 @@ Module Linear_Solve
 
     End Subroutine Load_Interior_Rows_Cheby
 
-    Subroutine Load_Single_Row_Cheby(r,row,col,amp,dorder,mpointer, clear_row, boundary)
+    Subroutine Load_Single_Row_Cheby(r,row,col,amp,dorder,mpointer, clear_row, boundary,r_eval)
         Implicit None
         Integer, Intent(In) :: r,row, col, dorder
+        Integer, Intent(In), Optional :: r_eval
         Integer :: n, off1, local_index, domain, nsub,hh,rupper
         real*8, Intent(In) :: amp
         real*8, Pointer, Dimension(:,:), Intent(InOut) :: mpointer
@@ -1488,6 +1517,7 @@ Module Linear_Solve
         off1 = 0                    ! column offset associated with that domain
         rupper = cpgrid%npoly(1)    ! uppermost radial index that belongs to domain being considered
         local_index = r             ! local index within r's domain
+        if (present(r_eval)) local_index = r_eval
         !Write(6,*)'rcheck : ', local_index
         Do hh = 1, nsub-1
             If (local_index .gt. rupper) Then

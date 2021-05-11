@@ -73,7 +73,7 @@ Module BoundaryConditions
     Logical :: use_checkpoint_bc_file = .false.
 
     Real*8, allocatable, dimension(:,:,:,:) :: bc_values  ! a 4-D array: (top/bottom, real/imag, my_num_lm, n_equations)
-
+    Integer, Allocatable :: bc_levels(:), num_bc_levels(:) ! boundary-condition rows and number of rows for each equation
     Namelist /Boundary_Conditions_Namelist/ Fix_Tvar_Top, Fix_Tvar_Bottom, T_Bottom, T_Top, dTdr_top, dTdr_bottom, &
         fix_dtdr_bottom, fix_dtdr_top, fix_divrt_top, fix_divt_top, fix_divrfc_top, fix_divfc_top, &
         no_slip_boundaries, strict_L_Conservation, fix_poloidalfield_top, fix_poloidalfield_bottom, &
@@ -153,8 +153,15 @@ Contains
         Integer :: real_ind, imag_ind
 
 
-        allocate(bc_values(2, 2, my_num_lm, n_equations))
+        allocate(bc_values(3, 2, my_num_lm, n_equations))
+        allocate(bc_levels(1:n_equations))
+        allocate(num_bc_levels(1:n_equations))
         bc_values = zero
+        bc_levels(1) = 1
+        bc_levels(2) = N_R
+        bc_levels(3) = N_R-1  ! one in from lower boundary -- hard coded for now...
+        num_bc_levels(:) = 2
+        
 
         uind = 1   ! Upper boundary in BC array
         lind = 2   ! Lower boundary in BC array
@@ -221,6 +228,12 @@ Contains
                   Call Set_BC_from_file(C_bottom_file, ceq, lind)
                 end if
             Endif   
+            
+            If (dipole_field_bottom) Then
+                num_bc_levels(ceq) = 3
+                bc_val = -C10_bottom/radius(N_R)
+                Call Set_BC(bc_val, 1,0,ceq,real_ind,3) ! 3 -> row N_r-1
+            Endif
 
         Endif
         Call Store_BC_Mask(bc_values)  ! to checkpointing
