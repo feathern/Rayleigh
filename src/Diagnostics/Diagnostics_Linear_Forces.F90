@@ -244,7 +244,7 @@ Contains
         Implicit None
         Real*8, Intent(InOut) :: buffer(1:,my_r%min:,my_theta%min:,1:)
         Integer :: r,k, t
-        Real*8 :: mypi, amp,del2u, estress
+        Real*8 :: del2u, estress
         Real*8, Allocatable :: mu_visc(:), dmudr(:), ovstheta(:), ovs2theta(:)
 
         Allocate(ovstheta(1:N_theta), ovs2theta(1:N_theta)) ! 1/sin; 1/sin^2
@@ -283,7 +283,7 @@ Contains
 
 
                 ! Finally, add the piece due to the gradient of mu
-        !        estress = buffer(PSI,dvrdr)-One_Third*buffer(PSI,vr)*ref%dlnrho(r)
+        !        estress = buffer(PSI,dvrdr)+One_Third*buffer(PSI,vr)*ref%dlnrho(r)
 
         !        qty(PSI) = 2.0d0*dmudr(r)*estress + mu_visc(r)*del2u
 

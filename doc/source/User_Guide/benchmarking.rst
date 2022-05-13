@@ -49,7 +49,7 @@ directory structure a each step as appropriate:
 #. cd path_to_my_sim
 
 #. cp
-   path_to_rayleigh/Rayleigh/etc/input_examples/c2001_case0_minimal   main_input
+   path_to_rayleigh/Rayleigh/input_examples/c2001_case0_minimal   main_input
 
 #. cp path_to_rayleigh/Rayleigh/bin/rayleigh.opt   rayleigh.opt (or use
    *ln -s* in lieu of *cp*)
@@ -86,19 +86,19 @@ this condition is satisfied, your installation is working correctly.
 Benchmark-input examples useful for verifying Rayleigh’s installation.
 Those from Christensen et al. (2001) :cite:`CHRISTENSEN200125`
 are Boussinesq. Those from Jones et al. (2011) :cite:`JONES2011120` are anelastic. Examples are found
-in the directory: Rayleigh/etc/input_examples/
+in the directory: Rayleigh/input_examples/
 
-+-----------------------+-----------------+--------------------------------+
-| Paper                 | Benchmark       | Input File                     |
-+=======================+=================+================================+
-| Christensen et al.    | Case 0          | c2001_case0_minimal            |
-+-----------------------+-----------------+--------------------------------+
-| Christensen et al.    | Case 1(MHD)     | c2001_case1_minimal            |
-+-----------------------+-----------------+--------------------------------+
-| Jones et al. 2011     | Steady Hydro    | j2011_steady_hydro_minimal     |
-+-----------------------+-----------------+--------------------------------+
-| Jones et al. 2011     | Steady MHD      | j2011_steady_MHD_minimal       |
-+-----------------------+-----------------+--------------------------------+
++-----------------------+-----------------+--------------------------------+--------------------------------+
+| Paper                 | Benchmark       | Input File                     | Specify in the main_input file |
++=======================+=================+================================+================================+
+| Christensen et al.    | Case 0          | c2001_case0_minimal            | benchmark_mode = 1             |
++-----------------------+-----------------+--------------------------------+--------------------------------+
+| Christensen et al.    | Case 1(MHD)     | c2001_case1_minimal            | benchmark_mode = 2             |
++-----------------------+-----------------+--------------------------------+--------------------------------+
+| Jones et al. 2011     | Steady Hydro    | j2011_steady_hydro_minimal     | benchmark_mode = 3             |
++-----------------------+-----------------+--------------------------------+--------------------------------+
+| Jones et al. 2011     | Steady MHD      | j2011_steady_MHD_minimal       | benchmark_mode = 4             |
++-----------------------+-----------------+--------------------------------+--------------------------------+
 
 
 .. _table_benchmark_low:

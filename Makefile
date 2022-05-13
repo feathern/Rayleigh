@@ -1,6 +1,7 @@
 -include make.inc
 SRC=src
 BUILD=$(SRC)/build
+INTERP=post_processing/interpolation
 
 # LC_COLLATE is set because sort is locale dependent otherwise.
 export LC_COLLATE=C
@@ -8,9 +9,12 @@ export LC_COLLATE=C
 # make the CUSTOMROOT variable available to sub-make processes
 export CUSTOMROOT
 
+# running "make target=dbg" will only compile the specified target
+target=all
+
 rayleigh: prepare_directory
 	@$(MAKE) --no-print-directory --directory=$(BUILD) clean_exec
-	@$(MAKE) --no-print-directory --directory=$(BUILD) all
+	@$(MAKE) --no-print-directory --directory=$(BUILD) $(target)
 	@echo ""
 	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	@echo "Compilation is complete."
@@ -47,6 +51,18 @@ ifdef CUSTOMROOT
 	@echo Any files from $(CUSTOMROOT) will overwrite standard Rayleigh source files.
 	@cp $(CUSTOMROOT)/* $(BUILD)/. 2>/dev/null || :
 endif
+
+interp3d.gnu:
+	@$(MAKE) --no-print-directory --directory=$(INTERP) interp3d.gnu
+	@mkdir -p $(PREFIX)/bin
+	@cp $(INTERP)/interp3d $(PREFIX)/bin/.
+
+interp3d.intel:
+	@$(MAKE) --no-print-directory --directory=$(INTERP) interp3d.intel
+	@mkdir -p $(PREFIX)/bin
+	@cp $(INTERP)/interp3d $(PREFIX)/bin/.
+
+
 clean:
 	@$(MAKE) --no-print-directory --directory=$(BUILD) clean_exec
 	@$(MAKE) --no-print-directory --directory=$(BUILD) clean
@@ -56,9 +72,21 @@ clear_ipynb:
 
 .PHONY: install
 install:
+ifeq ($(target), "all")
 	@echo "Installing executables into: " $(PREFIX)"/bin"
 	@mkdir -p $(PREFIX)/bin
 	@cp $(BUILD)/compiled/rayleigh.* $(PREFIX)/bin/.
+else
+ifdef output
+	@echo "Installing rayleigh.$(target) into: " $(PREFIX)"/bin/$(output)"
+	@mkdir -p $(PREFIX)/bin
+	@cp $(BUILD)/compiled/rayleigh.$(target) $(PREFIX)/bin/$(output)
+else
+	@echo "Installing executables into: " $(PREFIX)"/bin"
+	@mkdir -p $(PREFIX)/bin
+	@cp $(BUILD)/compiled/rayleigh.* $(PREFIX)/bin/.
+endif
+endif
 
 .PHONY: doc
 doc:
@@ -83,3 +111,4 @@ distclean:
 	@rm -f make.inc
 	@rm -rf doc/build
 	@echo "#Following configure, this file contains the definition of the PREFIX variable" >> make.inc
+

@@ -145,7 +145,6 @@ Contains
     Subroutine Compute_Angular_Momentum_Sources(buffer)
         Implicit None
         Real*8, Intent(InOut) :: buffer(1:,my_r%min:,my_theta%min:,1:)
-        Integer :: r,k, t
 
     End Subroutine Compute_Angular_Momentum_Sources
 
@@ -204,7 +203,7 @@ Contains
 
             DO_PSI
                 qty(PSI) = ref%density(r)*((radius(r)*sintheta(t))**2) &
-                    & *(m0_values(PSI2,vr)*Angular_Velocity)
+                    & *(m0_values(PSI2,vr)*ref%Coriolis_Coeff/2.0d0)
             END_DO
 
             Call Add_Quantity(qty)
@@ -214,7 +213,7 @@ Contains
 
             DO_PSI
                 qty(PSI) = ref%density(r)*((radius(r)*sintheta(t))**2) &
-                    & *(m0_values(PSI2,vtheta)*Angular_Velocity)
+                    & *(m0_values(PSI2,vtheta)*ref%Coriolis_Coeff/2.0d0)
             END_DO
 
             Call Add_Quantity(qty)
