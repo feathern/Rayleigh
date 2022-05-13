@@ -175,20 +175,11 @@ respectively. The evolution of :math:`\Theta` is described by
 .. math::
    :label: theta_evol
 
-<<<<<<< HEAD
-   {\mathrm{f}_1(r)\,\mathrm{f}_4(r)\left[\frac{\partial \Theta}{\partial t}  + \boldsymbol{v}\cdot\boldsymbol{\nabla}\Theta +v_r\,\mathrm{f}_{14}(r)\right] =
-       c_6\,\boldsymbol{\nabla}\cdot\left[\mathrm{f}_1(r)\,\mathrm{f}_4(r)\,\mathrm{f}_5(r)\,\boldsymbol{\nabla}\Theta \right]}
-        \atop
-        + c_{10}\mathrm{f}_6(r)
-        + c_8\Phi(r,\theta,\phi)
-        + c_9\mathrm{f}_7(r)\left[\boldsymbol{\nabla}\times\boldsymbol{B}\right]^2,
-=======
    \mathrm{f}_1(r)\,\mathrm{f}_4(r)\left[\frac{\partial \Theta}{\partial t}  + \boldsymbol{v}\cdot\boldsymbol{\nabla}\Theta + \mathrm{f}_{14}(r)v_r\right] =\
        c_6\,\boldsymbol{\nabla}\cdot\left[\mathrm{f}_1(r)\,\mathrm{f}_4(r)\,\mathrm{f}_5(r)\,\boldsymbol{\nabla}\Theta \right] \\
         +\ c_{10}\,\mathrm{f}_6(r)
         + c_8\,\Phi(r,\theta,\phi)
         + c_9\,\mathrm{f}_7(r)|\boldsymbol{\nabla}\times\boldsymbol{B}|^2,
->>>>>>> 34c02b2bccbbfe6de96dac64a2f0a14b934b53f0
 
 where the viscous heating :math:`\Phi` is given by
 
@@ -216,33 +207,8 @@ Note that when Rayleigh actually solves the equations, the following additional 
     \mathrm{f}_{12}(r) &= \frac{d\ln{\mathrm{f}_5}}{dr}\\
     \mathrm{f}_{13}(r) &= \frac{d\ln{\mathrm{f}_7}}{dr}.
 
-<<<<<<< HEAD
-   \begin{aligned}
-       \mathrm{f}_1(r) &\rightarrow \hat{\rho}(r)\; &c_1 &\rightarrow 2\Omega_0 \\
-       \mathrm{f}_2(r) &\rightarrow \frac{\hat{\rho(r)}}{c_P}g(r)\; &c_2 &\rightarrow 1 \\
-       \mathrm{f}_3(r) &\rightarrow \nu(r)\; &c_3 &\rightarrow 1\\
-       \mathrm{f}_4(r) &\rightarrow \hat{T}(r)\; &c_4 &\rightarrow \frac{1}{4\pi} \\
-       \mathrm{f}_5(r) &\rightarrow \kappa(r)\; &c_5 &\rightarrow 1 \\
-       \mathrm{f}_6(r) &\rightarrow Q(r)\; &c_6 &\rightarrow 1  \\
-       \mathrm{f}_7(r) &\rightarrow \eta(r)\; &c_7 &\rightarrow 1 \\
-       \mathrm{f}_{14}(r) &\rightarrow \frac{\partial \hat{S(r)}}{\partial r}\; &c_8&\rightarrow 1 \\
-       \mathrm{f}_{15}(r) &\rightarrow \frac{\hat{\rho(r)}}{c_P}\; &c_9 &\rightarrow \frac{1}{4\pi} \\
-       c_{10}&\rightarrow 1 &c_{11}&\rightarrow \Omega^2.\end{aligned}
 
-Here, :math:`\hat{\rho}` , :math:`\hat{T}` and :math:`\hat{S}` are the reference-state
-density temperature and entropy respectively. :math:`g` is the gravitational
-acceleration, :math:`c_P` is the specific heat at constant pressure, and
-:math:`\Omega_0` is the frame rotation rate. The viscous, thermal, and
-magnetic diffusivities are given by :math:`\nu`, :math:`\kappa`, and
-:math:`\eta` respectively. Finally, :math:`Q(r)` is an internal heating
-function; it might represent radiative heating or heating due to nuclear
-fusion, for instance. Note that in the anelastic formulation, the
-thermal variable :math:`\Theta` is interpreted is as entropy :math:`s`,
-rather than temperature :math:`T`. When these substitutions are made,
-Equations :eq:`momentum`-:eq:`induction` transform as follows.
-=======
 When supplying a custom reference state, the user may specify the six derivative functions "by hand." If the user fails to do so, Rayleigh will compute the required derivatives (only if the user supplies the function whose derivative is to be taken) from the function's Chebyshev coefficients. 
->>>>>>> 34c02b2bccbbfe6de96dac64a2f0a14b934b53f0
 
 Note that equations :eq:`momentum`-:eq:`induction` could have been formulated in other ways. For instance, we could combine
 :math:`\mathrm{f}_1` and :math:`\mathrm{f}_3` into a single function in
