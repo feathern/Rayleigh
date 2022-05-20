@@ -224,8 +224,19 @@ Contains
 
 
                 ! Temperature
-                amp = -ref%Buoyancy_Coeff/H_Laplacian
-                Call add_implicit_term(weq, tvar, 0, amp,lp)            ! Gravity
+                If (pycnoclinic .ne. 2) Then
+                    amp = -ref%Buoyancy_Coeff/H_Laplacian
+                    Call add_implicit_term(weq, tvar, 0, amp,lp)            ! Gravity
+                    If (l .eq. 1 )Write(6,*)'including implicit buoyancy'
+                Else
+                    If (l .eq. 1) Write(6,*)'skipping normal buoyancy'
+                Endif
+
+                ! dTdr Pycnoclinic term
+                !If ( (pycnoclinic .eq. 1) .or. (pycnoclinic .eq. 3) ) Then
+                !    amp = -ref%Buoyancy_Coeff2/H_Laplacian
+                !    Call add_implicit_term(weq, tvar, 1, amp,lp) 
+                !Endif
 
 
                 ! Pressure

@@ -102,6 +102,10 @@ Contains
         !////////////////////////////////////////////////////////////////////////
 
 
+        !///////////////////////////////////////////////
+        If (pycnoclinic .gt. 1) Call Pycno_time_update()
+
+
         Call Find_MyMinDT()    ! Piggyback CFL communication on transposes
 
 
@@ -147,6 +151,22 @@ Contains
         Call wsp%reform()    ! Move to p2b
         Call StopWatch(rtranspose_time)%increment()
     End Subroutine Physical_Space
+
+    Subroutine pycno_time_update()
+        Implicit None
+        Real*8 :: time_amp
+        ! time_amp = some function of simulation_time
+        time_amp = simulation_time/pycno_tau
+        if (simulation_time .gt. pycno_tau) time_amp = 1.0d0
+        If (my_rank .eq. 0) Then
+            if (simulation_time .le. pycno_tau) Then
+            Write(6,*)'pycno update: ', pycno_tau, simulation_time, time_amp
+            Endif
+        Endif
+        ref%buoyancy_coeff = pycno_t_coeff*time_amp
+        ref%buoyancy_coeff2 = pycno_dtdr_coeff*time_amp
+    End Subroutine pycno_time_update
+
 
     Subroutine Compute_dvtheta_by_dtheta()
         Implicit None
@@ -387,6 +407,24 @@ Contains
             Endif
 
         Endif
+
+
+        !Pycnoclinic
+        If (pycnoclinic .eq. 2) Then
+            ! Note:  this assumes Boussinesq.  If moving this to anelastic, double check on rho factor
+            !        in the buoyancy coeffs.
+            If (my_rank .eq. 0) Then
+                Write(6,*)'Explicitly evolving pycnoclinic term...'
+            Endif
+            DO_IDX
+                RHSP(IDX,wvar) = RHSP(IDX,wvar)+ref%buoyancy_coeff(r)*FIELDSP(IDX,tvar)*R_squared(r)
+            END_DO
+            
+            DO_IDX
+                RHSP(IDX,wvar) = RHSP(IDX,wvar)+ref%buoyancy_coeff2(r)*FIELDSP(IDX,dtdr)*R_squared(r)
+            END_DO           
+        Endif
+
 
 
         ! Multiply advection/coriolis pieces by rho

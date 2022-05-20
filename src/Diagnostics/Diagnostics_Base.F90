@@ -86,6 +86,7 @@ Module Diagnostics_Base
     Integer, Parameter :: ell0_vr = custom_offset+3
     Integer, Parameter :: ell0_tvar = custom_offset+4
     Integer, Parameter :: ell0_dpdr = custom_offset+5
+    Integer, Parameter :: buoy_check = custom_offset+6
 
     include "turbKE_codes.F"
     include "axial_field_codes.F"

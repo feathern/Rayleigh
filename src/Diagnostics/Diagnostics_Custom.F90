@@ -113,6 +113,8 @@ Contains
         ! Note:  qty is defined and allocated elsewhere
         !        it is dimensioned as qty(1:n_phi,my_r%min:my_r%max,my_theta%min:my_theta%max)
 
+
+
         If (compute_quantity(cross_helicity)) Then
             !Note the call to compute_quantity. This must always be done before adding a diagnostic.
             !The function compute_quantity peforms two functions:
@@ -208,6 +210,15 @@ Contains
         !DO_PSI
         !    qty(PSI) = wsp%p3a(PSI,vphi)*wsp%p3a(PSI,dtdp)*csctheta(t)  ! note
         !END_DO
+
+        If (compute_quantity(buoy_check)) Then
+          If (my_rank .eq. 0) Write(6,*)'computing custom..'
+          DO_PSI
+              qty(PSI) = ref%Buoyancy_Coeff(r)
+          END_DO
+          Call Add_Quantity(qty)
+        Endif
+
 
         If (compute_quantity(ell0_vr)) Then
             Write(6,*)'Ell0_vr', ell0_vr

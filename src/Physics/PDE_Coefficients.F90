@@ -64,7 +64,8 @@ Module PDE_Coefficients
         ! The following two terms are used to compute the ohmic and viscous heating
         Real*8, Allocatable :: ohmic_amp(:) !multiplied by {eta(r),H(r)}J^2 in dSdt eq.
         Real*8, Allocatable :: viscous_amp(:) !multiplied by {nu(r),N(r)}{e_ij terms) in dSdt eq.
-
+        
+        Real*8, Allocatable :: Buoyancy_Coeff2(:)    ! Multiplies dTdr for pycnoclinic effect
     End Type ReferenceInfo
 
     Integer, Parameter  :: eqn_coeff_version = 1
@@ -153,6 +154,10 @@ Module PDE_Coefficients
     Real*8  :: hyperdiffusion_beta = 0.0d0
     Real*8  :: hyperdiffusion_alpha = 1.0d0
 
+
+    !Pycnoclinic profiles
+    Real*8, Allocatable :: pycno_t_coeff(:), pycno_dtdr_coeff(:), pycno_time(:)
+
     Namelist /Transport_Namelist/ nu_type, kappa_type, eta_type, nu_power, kappa_power, eta_power, &
             & nu_top, kappa_top, eta_top, hyperdiffusion, hyperdiffusion_beta, hyperdiffusion_alpha
 
@@ -234,6 +239,15 @@ Contains
         ref%Lorentz_Coeff  = Zero
         ref%Centrifugal_Coeff = Zero
 
+        If (pycnoclinic .gt. 0) Then
+            Allocate(ref%buoyancy_coeff2(1:N_R))
+            Allocate(pycno_t_coeff(1:N_R), pycno_dtdr_coeff(1:N_R), pycno_time(1:N_R))
+            ref%buoyancy_coeff2(:) = zero
+            pycno_t_coeff(:) = zero
+            pycno_dtdr_coeff(:) = zero
+            pycno_time(:) = zero
+        Endif
+
     End Subroutine Allocate_Reference_State
 
     Subroutine Set_Rotation_dt()
@@ -290,6 +304,28 @@ Contains
         Do i = 1, N_R
             ref%Buoyancy_Coeff(i) = amp*(radius(i)/radius(1))**gravity_power
         Enddo
+        
+        If (pycnoclinic .gt. 0) Then
+            pycno_t_coeff = amp*zero   ! Adjust -- remember to keep amp for Rayleigh number
+            pycno_dtdr_coeff = amp*zero
+            If (my_rank .eq. 0) Then
+                Write(6,*)'Pycnoclinic initialization.'
+                Write(6,*)'Pycnotype: ', pycnoclinic
+            Endif
+            pycno_t_coeff = -amp*sin(two_pi*(radius-rmin)/(rmax-rmin) ) ! approximately form
+            
+            
+            If (pycnoclinic .gt. 1) Then
+                ! We will gradually ramp up
+                ref%buoyancy_coeff = zero
+                ref%buoyancy_coeff2 = zero
+            Else
+                ref%buoyancy_coeff = pycno_t_coeff
+                ref%buoyancy_coeff2 = pycno_dtdr_coeff
+            Endif
+        Endif
+        
+        
         ref%Centrifugal_Coeff     = amp*Froude_Number
         pressure_specific_heat = 1.0d0
         Call initialize_reference_heating()

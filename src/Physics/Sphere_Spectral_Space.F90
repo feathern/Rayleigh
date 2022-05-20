@@ -48,6 +48,16 @@ Contains
         wsp%config = 'p1a'
 
         old_deltat = deltat
+        
+        ! Force a timestep change to update pycnoclinic terms in the implicit matrices
+        ! if time-dependent and implicit
+        If ((pycnoclinic .eq. 3) .and. (pycno_update)) Then
+            If (.not. new_timestep) new_deltat = old_deltat  
+            new_timestep = .true.
+            if (simulation_time .gt. pycno_tau) pycno_update = .false.
+        Endif
+        
+        
         If (new_timestep) Then
             deltat = new_deltat
             new_timestep = .false.
