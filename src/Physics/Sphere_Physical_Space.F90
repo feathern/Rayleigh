@@ -154,14 +154,18 @@ Contains
 
     Subroutine pycno_time_update()
         Implicit None
-        Real*8 :: time_amp
-        ! time_amp = some function of simulation_time
-        time_amp = simulation_time/pycno_tau
-        if (simulation_time .gt. pycno_tau) time_amp = 1.0d0
-        If (my_rank .eq. 0) Then
-            if (simulation_time .le. pycno_tau) Then
-            Write(6,*)'pycno update: ', pycno_tau, simulation_time, time_amp
-            Endif
+        Real*8 :: time_amp, rel_time
+        time_amp = 0.0d0
+        If (simulation_time .gt. pycno_tau0) Then
+            rel_time = simulation_time-pycno_tau0
+            ! time_amp = some function of simulation_time
+            time_amp = rel_time/pycno_tau
+            if (rel_time .gt. pycno_tau) time_amp = 1.0d0
+            !If (my_rank .eq. 0) Then
+            !    if (simulation_time .le. pycno_tau) Then
+            !    Write(6,*)'pycno update: ', pycno_tau, simulation_time, time_amp
+            !    Endif
+            !Endif
         Endif
         ref%buoyancy_coeff = pycno_t_coeff*time_amp
         ref%buoyancy_coeff2 = pycno_dtdr_coeff*time_amp
@@ -413,9 +417,9 @@ Contains
         If (pycnoclinic .eq. 2) Then
             ! Note:  this assumes Boussinesq.  If moving this to anelastic, double check on rho factor
             !        in the buoyancy coeffs.
-            If (my_rank .eq. 0) Then
-                Write(6,*)'Explicitly evolving pycnoclinic term...'
-            Endif
+            !If (my_rank .eq. 0) Then
+            !    Write(6,*)'Explicitly evolving pycnoclinic term...'
+            !Endif
             DO_IDX
                 RHSP(IDX,wvar) = RHSP(IDX,wvar)+ref%buoyancy_coeff(r)*FIELDSP(IDX,tvar)*R_squared(r)
             END_DO

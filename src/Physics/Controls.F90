@@ -79,13 +79,14 @@ Module Controls
     ! Pycnoclinic variables
     Integer :: pycnoclinic = 0  ! 0 -- none, 1-- static, 2/3-- time-dependent (explicit/implicit)
     Integer :: pycno_time_type = 0 ! determines ramp up function
+    Real*8  :: pycno_tau0 = 0.0d0 ! regular gravity is zero until tau1 (centrifual is there)
     Real*8  :: pycno_tau = 0.0d0  ! ramp-up time parameter
     Logical :: pycno_update = .true.
     Namelist /Physical_Controls_Namelist/ magnetism, nonlinear, rotation, lorentz_forces, &
                 & viscous_heating, ohmic_heating, advect_reference_state, benchmark_mode, &
                 & benchmark_integration_interval, benchmark_report_interval, &
                 & momentum_advection, inertia, Coriolis_Force, Centrifugal_Force, &
-                & pycnoclinic, pycno_time_type, pycno_tau
+                & pycnoclinic, pycno_time_type, pycno_tau, pycno_tau0
 
     !///////////////////////////////////////////////////////////////////////////
     !   Temporal Controls
