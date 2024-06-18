@@ -67,6 +67,14 @@ Module PDE_Coefficients
         Real*8, Allocatable :: ohmic_amp(:) ! Multiplied by {eta(r),H(r)}J^2 in dSdt eq.
         Real*8, Allocatable :: viscous_amp(:) ! Multiplied by {nu(r),N(r)}{e_ij terms) in dSdt eq.
 
+        ! These pseudo-density variables serve as density throughout much of the code.
+        ! Unless the Pseudo-incompressible approximation is invoked, they are identical to the
+        ! density and its logarithmic derivatives that appear in the anelastic equations.
+
+        Real*8, Allocatable :: rho_star(:)
+        Real*8, Allocatable :: dlnrho_star(:)
+        Real*8, Allocatable :: d2lnrho_star(:)
+        Real*8, Allocatable :: entropy(:)
     End Type ReferenceInfo
 
     Type(ReferenceInfo) :: ref
@@ -299,11 +307,25 @@ Contains
         ref%Coriolis_Coeff = Zero
         ref%Lorentz_Coeff  = Zero
 
+        ! Pseudo-incompressible variables
+        Allocate(ref%rho_star(1:N_R))
+        Allocate(ref%dlnrho_star(1:N_R))
+        Allocate(ref%d2lnrho_star(1:N_R))
+        Allocate(ref%entropy(1:N_R))
+
+        ref%rho_star(:)     = Zero
+        ref%dlnrho_star(:)  = Zero
+        ref%d2lnrho_star(:) = Zero
+        ref%entropy(:)      = Zero
+
     End Subroutine Allocate_Reference_State
 
     Subroutine Set_Rotation_dt()
         Implicit None
         Real*8 :: rotational_timescale
+        
+        !TODO (PSI) : Do we need to modify the Coriolis CFL?
+
         !Adjust the maximum timestep to account for rotation rate, if necessary.
         
         rotational_timescale = 1.0d0/ref%Coriolis_Coeff
@@ -973,10 +995,28 @@ Contains
         Ref%dlnrho = - poly_n * c1 * d / (zeta * Radius**2)
         Ref%d2lnrho = - Ref%dlnrho*(2.0d0/Radius-c1*d/zeta/Radius**2)
 
+
+
+
         Ref%Temperature = T_c * zeta
         Ref%dlnT = -(c1*d/Radius**2)/zeta
 
         Ref%dsdr = volume_specific_heat * (Ref%dlnT - (Specific_Heat_Ratio - 1.0d0) * Ref%dlnrho)
+
+        If (pseudo_incompressible) Then
+            ref%entropy(:) = pressure_specific_heat*log(ref%temperature/ref%temperature(1))
+            ref%entropy(:) = ref%entropy-(specific_heat_ratio-1)*log(ref%density(:)/ref%density(1))
+            ref%rho_star(:) = ref%density(:)*exp(entropy(:)/Pressure_Specific_Heat)
+            !TODO (PSI) : Set correct expressions for logarithmic derivatives below
+            ref%dlnrho_star(:) = Zero
+            ref%d2lnrho_star(:) = Zero
+        Else
+            ref%rho_star(:) = ref%density(:)
+            ref%dlnrho_star(:) = ref%dlnrho(:)
+            ref%d2lnrho_star(:) = ref%d2lnrho_star(:)
+        Endif
+
+
 
         Ref%Buoyancy_Coeff = gravity/Pressure_Specific_Heat*ref%density
 
