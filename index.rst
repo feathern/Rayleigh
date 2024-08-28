@@ -19,6 +19,7 @@ This documentation is structured into the following sections:
    doc/source/citing_rayleigh
    doc/source/accessing_and_sharing_data
    doc/source/research_enabled_by_rayleigh
+   doc/source/performance_data
    doc/source/quick_reference
    doc/source/getting_help
 

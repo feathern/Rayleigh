@@ -12,6 +12,7 @@ mpicmd="mpiexec -np"  # The mpiexec or mpirun command up to the process count
 raexec="rayleigh.opt" # The rayleigh executable to test
 
 maxcpu=2048 # Won't test process combinations with ncpu > maxcpu
+mincpu=1024 # and similarly so for ncpu < mincpu
 
 nmn=2 
 nmx=7 # Will test values of nprow and npcol from 2^nmn up to 2^nmx
@@ -29,7 +30,6 @@ nts=( "192" "384" "768" "1536" ) # ntheta values
 istart=1
 iend=1
 
-mincpu=( 16 32 64 128 )
 
 
 ###############################################################
@@ -57,7 +57,7 @@ do
             npcol=$((2 ** $m))
             ncpu=$(($nprow * $npcol))
             
-            if [ $npcol -le $colmax ] && [ $nprow -le $rowmax ] && [ $ncpu -le $maxcpu ]
+            if [ $npcol -le $colmax ] && [ $nprow -le $rowmax ] && [ $ncpu -le $maxcpu ] && [ $ncpu -ge $mincpu ]
             then
 
             runcmd=$mpicmd" "$ncpu" "$raexec" -nprow "$nprow" -npcol "$npcol" -nr "$nr" -nt "$nt
