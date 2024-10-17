@@ -34,7 +34,7 @@ Module Initial_Conditions
     Use PDE_Coefficients, Only : n_scalar_max, s_conductive, heating_type,ref, kappa, dlnkappa
     Use BoundaryConditions, Only : T_top, T_bottom, fix_tvar_Top, fix_tvar_bottom,&
          & fix_dtdr_top, fix_dtdr_bottom, dtdr_top, dtdr_bottom, &
-         & C10_bottom, C11_bottom, C1m1_bottom
+         & C10_bottom, C11_bottom, C1m1_bottom, chi_a_bottom, chi_p_bottom
     Use ClockInfo, Only : Euler_Step
     Use Linear_Solve
     Use Math_Utility
@@ -68,19 +68,28 @@ Module Initial_Conditions
     Character*120 :: chi_a_init_file(1:n_scalar_max) = '__nothing__'
     Character*120 :: chi_p_init_file(1:n_scalar_max) = '__nothing__'
     Character*120 :: custom_thermal_file = '__nothing__'
+    
+    Integer :: chi_a_init_type(1:n_scalar_max) = 0
+    Integer :: chi_p_init_type(1:n_scalar_max) = 0
+    Real*8  :: chi_a_amp(1:n_scalar_max) = 0.0d0
+    Real*8  :: chi_p_amp(1:n_scalar_max) = 0.0d0
+    Logical :: chi_a_conductive_profile(1:n_scalar_max) = .false.
+    Logical :: chi_p_conductive_profile(1:n_scalar_max) = .false.
 
     Namelist /Initial_Conditions_Namelist/ init_type, temp_amp, temp_w, restart_iter, &
             & magnetic_init_type,alt_check, mag_amp, conductive_profile, rescale_velocity, &
             & rescale_bfield, velocity_scale, bfield_scale, rescale_tvar, &
             & rescale_pressure, tvar_scale, pressure_scale, mdelta, &
             & t_init_file, w_init_file, p_init_file, z_init_file, &
-            & c_init_file, a_init_file, custom_thermal_file, chi_a_init_file, chi_p_init_file
+            & c_init_file, a_init_file, custom_thermal_file, chi_a_init_file, chi_p_init_file, &
+            & chi_a_init_type, chi_p_init_type, chi_a_amp, chi_p_amp
 Contains
 
     Subroutine Initialize_Fields()
         Implicit None
         Logical :: dbtrans, dbconfig
         Logical :: test_reduce = .true.
+        Integer :: i
         ! When coming out of this routine, the RHS of the equation set should contain the field values.
         ! This setup is consistent with the program having just completed a time step
 
@@ -100,7 +109,6 @@ Contains
         Endif
         dbtrans = .not. static_transpose
         dbconfig = .not. static_config
-
 
         Call wsp%init(field_count = wsfcount, config = 'p1b', &
             dynamic_transpose =dbtrans, dynamic_config = dbconfig, &
@@ -178,7 +186,8 @@ Contains
             If (my_rank .eq. 0) Then
                 Call stdout%print(" ---- Hydro Init Type    : Random Thermal Field ")
             Endif
-            call random_thermal_init()
+
+            Call Random_Scalar_Init(teq, temp_amp, t_bottom, conductive_profile)
         Endif
 
         if (init_type .eq. 8) then
@@ -187,6 +196,20 @@ Contains
             Endif
             call file_init()
         Endif
+
+        Do i = 1, n_active_scalars
+            If (chi_a_init_type(i) .eq. 7) Then
+                Call Random_Scalar_Init(chiaeq(i), chi_a_amp(i), &
+                    chi_a_bottom(i), chi_a_conductive_profile(i))
+            Endif
+        Enddo
+        
+        Do i = 1, n_passive_scalars
+            If (chi_p_init_type(i) .eq. 7) Then
+                Call Random_Scalar_Init(chipeq(i), chi_p_amp(i), &
+                    chi_p_bottom(i), chi_p_conductive_profile(i))
+            Endif
+        Enddo
 
 
         If (magnetism) Then
@@ -515,27 +538,27 @@ Contains
         !Call a_and_c%obliterate()
     End Subroutine Random_Init_Mag
 
-    Subroutine Random_Thermal_Init()
+    Subroutine Random_Scalar_Init(eqind, amp, bottom_value, conductive)
         ! Generates random initial thermal perturbations
         Implicit None
-        Real*8 :: amp
+        Integer, Intent(In) :: eqind
+        Real*8, Intent(In) :: amp, bottom_value
+        Logical, Intent(In) :: conductive
         Real*8, Allocatable :: profile0(:)
         Integer :: fcount(3,2)
         type(SphericalBuffer) :: sbuffer
         fcount(:,:) = 1
 
-        amp = temp_amp
-
         ! Construct the streamfunction field buffer
         Call sbuffer%init(field_count = fcount, config = 'p1b')
         Call sbuffer%construct('p1b')
 
-        If (conductive_profile) Then
+        If (conductive) Then
             Allocate(profile0(1:N_R))
             profile0(:) = 0.0d0
             If (allocated(s_conductive)) Then
                 If (heating_type .eq. 0) Then
-                    profile0(:) = t_bottom*s_conductive(:)
+                    profile0(:) = bottom_value*s_conductive(:)
                 Else
                     profile0(:) = s_conductive(:)
                 Endif
@@ -546,41 +569,30 @@ Contains
                 profile0(:) = s_conductive(:)
 
             Endif
+            ! Randomize the field, but maintain a conductive profile for ell = 0
             Call Generate_Random_Field(amp, 1, sbuffer,ell0_profile = profile0)
             DeAllocate(profile0)            
-                    
-        Else If (trim(custom_thermal_file) .ne. '__nothing__') then
-            Allocate(profile0(1:N_R))
-            profile0(:) = 0.0d0
-            
-            Call Load_Radial_Profile(custom_thermal_file,profile0)
-
-            ! Randomize the entropy
-            Call Generate_Random_Field(amp, 1, sbuffer,ell0_profile = profile0)
-            DeAllocate(profile0)
 
         Else
-
-
-
-            ! Randomize the entropy
+            ! Randomize the field
             Call Generate_Random_Field(amp, 1, sbuffer)
         Endif
 
-        Call Set_RHS(teq,sbuffer%p1b(:,:,:,1))
+        Call Set_RHS(eqind,sbuffer%p1b(:,:,:,1))
         Call sbuffer%deconstruct('p1b')
 
-    End Subroutine Random_Thermal_Init
+    End Subroutine Random_Scalar_Init
 
-    subroutine file_init()
+
+    Subroutine File_Init()
         ! initialize hydrodynamic variables from generic input files
-        implicit none
-        integer :: i
-        integer :: fcount(3,2)
-        type(SphericalBuffer) :: tempfield
+        Implicit None
+        Integer :: i
+        Integer :: fcount(3,2)
+        Type(SphericalBuffer) :: tempfield
         fcount(:,:) = 1
-        call tempfield%init(field_count = fcount, config = 'p1b')
-        call tempfield%construct('p1b')
+        Call tempfield%init(field_count = fcount, config = 'p1b')
+        Call tempfield%construct('p1b')
 
         if (trim(w_init_file) .ne. '__nothing__') then
             call read_input(w_init_file, 1, tempfield)
@@ -618,7 +630,7 @@ Contains
 
         call tempfield%deconstruct('p1b')
 
-    end subroutine file_init
+    End Subroutine File_Init
 
     subroutine magnetic_file_init()
         ! initialize magnetic variables from generic input files

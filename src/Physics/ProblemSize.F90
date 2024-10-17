@@ -604,6 +604,7 @@ Contains
                 Do i = 2, N_R
                     Delta_r(i) = radius(i-1)-radius(i)
                 Enddo
+                Write(6,*)'Min, max delta_r: ', MINVAL(delta_r), Maxval(delta_R)
             Else
                 If (my_rank .eq. 0) Then
                     Call stdout%print(" ---- Grid Spacing        :  Uniform")
@@ -915,6 +916,7 @@ Contains
             Call MPI_Bcast(radius, N_R, MPI_DOUBLE_PRECISION, 0, pfi%wcomm%comm,i)
             rmin = radius(N_R) ! Only rank zero has calculated rmin and rmax at this point
             rmax = radius(1)
+            Write(6,*)'Rmin/rmax check: ', rmin, rmax
         Else
             If (global_rank .eq. 0) Then
                 If (pi_integer .eq. 314) Then
