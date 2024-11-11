@@ -33,6 +33,7 @@ Contains
         Integer :: chivar, dchidr, dchidt, dchidp, d2chidr2
         
         n_scalars = n_active_scalars + n_passive_scalars
+
         Do ii = 1, n_scalars
             if (ii .le. n_active_scalars) then
                  ind   = ii

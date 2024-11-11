@@ -82,7 +82,8 @@ Module Initial_Conditions
             & rescale_pressure, tvar_scale, pressure_scale, mdelta, &
             & t_init_file, w_init_file, p_init_file, z_init_file, &
             & c_init_file, a_init_file, custom_thermal_file, chi_a_init_file, chi_p_init_file, &
-            & chi_a_init_type, chi_p_init_type, chi_a_amp, chi_p_amp
+            & chi_a_init_type, chi_p_init_type, chi_a_amp, chi_p_amp, chi_a_conductive_profile, &
+            & chi_p_conductive_profile
 Contains
 
     Subroutine Initialize_Fields()
@@ -557,11 +558,11 @@ Contains
             Allocate(profile0(1:N_R))
             profile0(:) = 0.0d0
             If (allocated(s_conductive)) Then
-                If (heating_type .eq. 0) Then
-                    profile0(:) = bottom_value*s_conductive(:)
-                Else
+                !If (heating_type .eq. 0) Then
+                !    profile0(:) = bottom_value*s_conductive(:)
+                !Else
                     profile0(:) = s_conductive(:)
-                Endif
+                !Endif
             Else
                 Allocate(s_conductive(1:N_R))
                 !The conductive {S,T} profile depends on kappa and ref%heating, so do this here.
