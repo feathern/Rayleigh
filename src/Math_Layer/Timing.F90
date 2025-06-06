@@ -23,6 +23,7 @@ USE RA_MPI_BASE, Only : MPI_WTIME, MPI_WTICK
 Type, Public :: Timer
     Real*8 :: delta, elapsed
     Real*8 :: t1
+    Real*8 :: tl 
 
     Contains
     Procedure :: Init  => Initialize_Timer
@@ -60,7 +61,7 @@ Subroutine Stopclock(self)
     Real*8 :: t2
     Class(Timer) :: self
     t2 = MPI_WTIME()
-    self%delta = t2-self%t1
+    self%delta = (t2-self%t1)*self%tl
 End Subroutine Stopclock
 
 Subroutine Increment(self)
