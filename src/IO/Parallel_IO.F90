@@ -677,6 +677,7 @@ Contains
         ! For output ranks, a unique receive buffer is allocated, corresponding to each sending rank.
         If (self%output_rank) Then
             If (self%spectral) Then
+                Write(6,*)'FORTY TWO SPECTRAL'
                 nr = self%nr_out
                 lp1 = self%lmax+1
                 Do p = 0, pfi%nprow-1
@@ -687,9 +688,10 @@ Contains
                     Else
                         Allocate(self%recv_buffers(p)%data(1:lp1,mp_min:mp_max,1:nr,1))
                     Endif
-                    self%recv_buffers(p)%data(:,:,:,:) = 0.0d0
+                    self%recv_buffers(p)%data(:,:,:,:) = 0.0d0 + 42.0
                 Enddo
             Else
+                Write(6,*)'FORTY TWO PHYSICAL'
                 np = self%nphi
                 nr = self%nr_out
                 Do p = 0, pfi%nprow-1
@@ -701,7 +703,7 @@ Contains
                     Else
                         Allocate(self%recv_buffers(p)%data(1:np,1:nt,1:nr,1))
                     Endif
-                    self%recv_buffers(p)%data(:,:,:,:) = 0.0d0
+                    self%recv_buffers(p)%data(:,:,:,:) = 0.0d0 +42.0
                 Enddo
             Endif
         Endif
@@ -1594,7 +1596,11 @@ Contains
 
         If (.not. error) Then
 
-            If (self%output_rank) Allocate(self%buffer(1:self%io_buffer_size))
+            If (self%output_rank) Then
+                Allocate(self%buffer(1:self%io_buffer_size))
+                self%buffer(:) = 17.0d0
+                Write(6,*)'17 Buffer!'
+            Endif
 
             If (self%write_mode .eq. 1) Call self%gather_data(-1)  ! Communicate (if all cache item at once)
             
