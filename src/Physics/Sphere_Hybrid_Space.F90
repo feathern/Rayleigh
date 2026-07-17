@@ -636,10 +636,11 @@ Contains
         Endif
         If (new_deltat .lt. min_time_step) Then
             If (my_rank .eq. 0) Then
-                Call stdout%print('Time step became too small.')
+                !Call stdout%print('Time step became too small.')
                 Write(tmstr,dtfmt)new_deltat
                 Write(tmstr2,dtfmt)min_time_step
                 Call stdout%print(' DeltaT became : '//tmstr//'  Min DeltaT Allowed:   '//tmstr2)
+                Call ascii_msg()
                 Call stdout%partial_flush()
             Endif
             Call pfi%exit()
@@ -671,4 +672,51 @@ Contains
         Enddo
         DeAllocate(arr)
     End Subroutine DeAllocate_rlm_Field
+
+    Subroutine ascii_msg()
+        Call stdout%print("  ")
+        Call stdout%print("  ")
+        Call stdout%print("     .=======@@@                                    .@@@=====.")
+        Call stdout%print("     =%%%%@@@@      :.--             ..=:=-.. .. ..    @@@%%%=")
+        Call stdout%print("     =%%%@@@    .:*=.::                    :-:-:  ..:    @@@%=")
+        Call stdout%print("     =%@@@       .     :-+=  .  .  .           -::. ....   @@@")
+        Call stdout%print("     +@@    .    . -@@      .         .          :......     @")
+        Call stdout%print("     @@  :   .::::           :  -:..      .       ..  .....   ")
+        Call stdout%print("        :.::-::     .       +*@=     ...        . :...  . ..  ")
+        Call stdout%print("       .. : =    .    .                  .:       :  .. ...   ")
+        Call stdout%print("      : ..:      .  .                 :           *...... ... ")
+        Call stdout%print("      ..   . .   : :                .         .    *: ..:...  ")
+        Call stdout%print("      .* :         -     ==-                .   .    .=.....  ")
+        Call stdout%print("      .     .        - .    :%@@@@@@:.                 .+::.: ")
+        Call stdout%print("      .            .  =+- %@@@@@@@@@@@@@@@*.             :=.  ")
+        Call stdout%print("      .::  .   .   ...: .#@@@%#%%%#%%%#%%@@@@@             =. ")
+        Call stdout%print("      . :.     .   .   : %-@@%%%%%%%%%%%%%%%@@@@  .      . .- ")
+        Call stdout%print("      ..:.::::. .      ..#:.@@@@@@@@@@@%%@@@@@@@    ...   . - ")
+        Call stdout%print("      :  ..:...   -=:: . @#*@.       :@@@@.    .            . ")
+        Call stdout%print("      ... . :   .   .   *@-. .+*@@@.:.:@@.:@@@@#          .:- ")
+        Call stdout%print("        .....   .. :. :==*@=:..%  @ @= =@..  @-  .     --+:.: ")
+        Call stdout%print("       ......   .  -  :=%=#@@@@%@@@@@...@@@@=+@  ::-=--::.. . ")
+        Call stdout%print("      .. ..   @:   * .  +#@#@@@@@@%%@*-.@.@@@@@  :. :-.: . -. ")
+        Call stdout%print("       . ... @@@@: - :-:  .==+@@@@@@@**.@#@@@#%  . .:  . .... ")
+        Call stdout%print("      ...... @##@@*=.+     .=..*@@@*@.%=@@:@@=   .. .= : .  . ")
+        Call stdout%print("      .. . . @##@*@@.:.-. .. #==+.-@@   : @@#.@@  : ...   . : ")
+        Call stdout%print("      .. ... #@#@*%@@=.-     :+++@@    %@ *@%:@@@  - ...:.:.. ")
+        Call stdout%print("      : -..:. @%#%%-@@@@  -  -% .      +#   .@@%@@ :..... . . ")
+        Call stdout%print("      . :. .   @@-@*%@%@@.   .--%%@@@%@@@%@@=@%%@@   .:.:. .. ")
+        Call stdout%print("      .:...:.:  @*#@+%%%@@..  . -:  ..  .. -*@%%#@   .  : ..  ")
+        Call stdout%print("      .    .     @%@*##@%@@%.     . -.# .- .@@#%%@# . . ..... ")
+        Call stdout%print("      : :-  .. #  @@*#*#@@@@@.   . :  +:   +@%%%@@@  :.-.   . ")
+        Call stdout%print("        ....    @  @@#+@=*@%@@@ .      .  :@@%%%@#@    .: =.  ")
+        Call stdout%print("     @@     -..  -  .@#*#@*@@@@@@. -     :@@%%@@*@ -*#*       ")
+        Call stdout%print("     =@@         ...  @@@+@++@@@@@@*:--%@@@@%@**@:  :.-*#=   @")
+        Call stdout%print("     =%@@@     . : : .  @@%#@*@=@@@@@@@@@@@@@-+@@ @.==+..  @@@")
+        Call stdout%print("     =%%%@@@.  .=.@  - +. #@@*%#*#=-%@@@@#:*%@@   @. =.  @@@%=")
+        Call stdout%print("     =%%%%%@@@   . =    %.   #@@@@@@#@*@*@@@@.  :.-.#  @@@%%%=")
+        Call stdout%print("     =%%%%%%%@@@.   @-..=*+: .  ..-=**-##-    @-..  @@@@%%%%%=")
+        Call stdout%print("     .=========#@@@@ @    .:.  .          .      @@@%+=======.")
+        Call stdout%print(" ")
+        Call stdout%print('                     Time step became too small.')
+        Call stdout%print("                           Find your center.             ")
+        Call stdout%print(" ")
+    End
 End Module Sphere_Hybrid_Space
