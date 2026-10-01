@@ -440,7 +440,7 @@ Contains
             my_min = pfi%all_2p(self%row_rank)%min
             my_max = pfi%all_2p(self%row_rank)%max
 
-            Allocate(tmp(1:(my_max-my_min)))
+            Allocate(tmp(1:(my_max-my_min+1)))
 
             Do p = 0, pfi%nprow-1
                 tmin = pfi%all_2p(p)%min
@@ -1583,6 +1583,10 @@ Contains
                     If (present(clear_existing)) Then
                         If (clear_existing) Then
                             Call MPI_FILE_set_size(funit, zero_file_size, ierr)
+                            ! Some MPI implementations don't wait for MPI_FILE_set_size
+                            ! to clear the existing file so their data gets wiped out.
+                            ! Introduce an MPI barrier to prevent them from carrying on to output.
+                            Call MPI_BARRIER(self%ocomm%comm, ierr)
                         Endif
                     Endif
 

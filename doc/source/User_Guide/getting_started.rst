@@ -288,7 +288,10 @@ be renamed.
 Alternative: Configure using CMake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`CMake <https://cmake.org>`_ can be used as an alternative to the configure script. It is especially useful when running on a new platform not yet supported by configure or when you are generally more comfortable with CMake from other projects.
+`CMake <https://cmake.org>`_ can be used as an alternative to the configure script. It is especially useful when running on a new platform not yet supported by configure or when you are generally more comfortable with CMake from other projects. It is recommended to load the MKL or ``cray-libsci`` module beforehand, so CMake can find it automatically. When using custom BLAS, LAPACK, and FFTW instead of MKL, loading them before running ``cmake`` is recommended, as they will be automatically detected as well.
+``
+
+Sorry, adjusting to RST format.
 
 .. code-block:: bash
 
@@ -388,29 +391,6 @@ and ``TACC_CC`` are not set, and so the compilers need to be specified manually:
    cmake --build build -j -t install
 
 An example jobscript for Stampede3 may be found in *Rayleigh/job_scripts/TACC_Stampede3*.
-
-Using the Apptainer container system
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-We provide a precompiled container that provides an alternative way to use Rayleigh on the TACC computing systems Stampede3 and Frontera.
-
-To activate the container system and download the container:
-
-.. code-block:: bash
-
-   module load tacc-apptainer
-   apptainer pull docker://gassmoeller/rayleigh:tacc-latest
-
-This will create a file `rayleigh_tacc-latest.sif` that you can think of as a Rayleigh executable.
-To run Rayleigh models using the downloaded container run (on a compute node):
-
-.. code-block:: bash
-
-   ibrun -n N_CORES apptainer run rayleigh_tacc-latest.sif rayleigh.opt
-
-Make sure to replace N_CORES with the number of requested cores (or remove -n option to run with the
-total number of cores requested). Also make sure to provide the correct path to `rayleigh_tacc-latest.sif`
-if it is not in the current directory.
 
 .. _pleiades:
 
