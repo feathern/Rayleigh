@@ -47,7 +47,7 @@ function opt_flags {
 
   if [[ $1 == "GNU" ]]
   then
-    echo '-O3 -ffixed-line-length-132 -fallow-argument-mismatch'
+    echo '-O3 -ffixed-line-length-132' # -fallow-argument-mismatch'
   fi
 
   if [[ $1 == "AOCC" ]]
@@ -70,7 +70,7 @@ function dbg_flags {
   fi
   if [[ $1 == "GNU" ]]
   then
-    echo '-O0 -g -fbounds-check -ffpe-trap=invalid,zero,overflow -fbacktrace -ffixed-line-length-132 -fallow-argument-mismatch'
+    echo '-O0 -g -fbounds-check -ffpe-trap=invalid,zero,overflow -fbacktrace -ffixed-line-length-132' # -fallow-argument-mismatch'
   fi
   if [[ $1 == "AOCC" ]]
   then
